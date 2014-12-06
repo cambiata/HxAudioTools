@@ -4,7 +4,9 @@ import format.wav.Reader;
 import format.wav.Writer;
 import haxe.io.Bytes;
 import haxe.io.BytesInput;
+#if (sys)
 import sys.io.File;
+#end
 
 /**
  * WavData16Mono

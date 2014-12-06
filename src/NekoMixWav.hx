@@ -21,10 +21,10 @@ class NekoMixWav
 	
 	static function main() 
 	{			
-		var w1 = Wav16Mono.fromFile('../audio/mono/sample.wav');
-		var w2 = Wav16Mono.fromFile('../audio/mono/leadvox.wav');
+		var w1 = Wav16Mono.fromFile('../assets/audio/mono/sample.data');
+		var w2 = Wav16Mono.fromFile('../assets/audio/mono/leadvox.data');
 		var w3 = Wav16Tools.mix(w1, w2);
-		w3.saveFile('mix2.wav');		
+		w3.saveFile('mixed.wav');		
 	}
 	
 }
