@@ -1,5 +1,6 @@
 package;
 
+import audiotools.Wav16DSP;
 import audiotools.Wav16Mono;
 import audiotools.Wav16Tools;
 import format.wav.Data.WAVE;
@@ -21,10 +22,11 @@ class NekoMixWav
 	
 	static function main() 
 	{			
-		var w1 = Wav16Mono.fromFile('../assets/audio/mono/sample.data');
-		var w2 = Wav16Mono.fromFile('../assets/audio/mono/leadvox.data');
-		var w3 = Wav16Tools.mix(w1, w2);
+		var w1 = Wav16Mono.fromFile('../assets/audio/mono/sample.wav');
+		var w2 = Wav16Mono.fromFile('../assets/audio/mono/leadvox.wav');
+		var w3 = Wav16DSP.mix(w1, w2);
 		w3.saveFile('mixed.wav');		
+		trace('Wave files mixed together, and saved as "mixed.wav"');
 	}
 	
 }
