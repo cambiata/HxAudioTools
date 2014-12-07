@@ -21,17 +21,16 @@
     <class path="f:\_haxelib\format\3,1,2" />
     <class path="f:\_haxelib\actuate\1,7,5" />
     <class path="src" />
-    <class path="f:\_haxelib\lime\2,0,0-beta\legacy" />
-    <class path="bin\windows\cpp\haxe" />
+    <class path="bin\flash\haxe" />
   </classpaths>
   <!-- Build options -->
   <build>
-    <option directives="openfl=2.1.5&#xA;lime=2.0.0-beta&#xA;format=3.1.2&#xA;actuate=1.7.5&#xA;tools=2.0.0-beta&#xA;lime-legacy&#xA;no-compilation&#xA;native&#xA;lime-native&#xA;openfl-native&#xA;windows&#xA;desktop" />
+    <option directives="openfl=2.1.5&#xA;lime=2.0.0-beta&#xA;format=3.1.2&#xA;actuate=1.7.5&#xA;tools=2.0.0-beta&#xA;no-compilation&#xA;openfl-flash&#xA;web" />
     <option flashStrict="False" />
     <option noInlineOnDebug="False" />
     <option mainClass="ApplicationMain" />
     <option enabledebug="True" />
-    <option additional="--remap flash:openfl&#xA;#--macro keep(&quot;OpenFLMixWav&quot;)&#xA;-debug " />
+    <option additional="-swf-version 11.2&#xA;-debug " />
   </build>
   <!-- haxelib libraries -->
   <haxelib>

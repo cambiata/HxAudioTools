@@ -67,9 +67,9 @@ class WavSprite extends ResizeSprite
 		
 		if (width == 0) {
 			var autowidth = this.wav16.ints.length / 44100 * autosize * 10;
-			super(0, 0, autowidth, 100, 0x000000, 0.1);
+			super(0, 0, autowidth, 100, 0x000000, 0.2);
 		} else
-			super(0, 0, width, height, 0x000000, 0.1);
+			super(0, 0, width, height, 0x000000, 0.2);
 	}
 	
 	static var LINEWIDTH:Float = 1.4;

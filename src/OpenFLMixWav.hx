@@ -13,6 +13,7 @@ import openfl.display.Sprite;
 import openfl.Lib;
 import openfl.media.Sound;
 
+using audiotools.Wav16DSP;
 
 
 /**
@@ -31,7 +32,7 @@ class OpenFLMixWav extends Sprite
 			var aBytes = Lambda.array(loadedBytes);
 			var w1 = Wav16Mono.fromBytes(aBytes[0]);
 			var w2 = Wav16Mono.fromBytes(aBytes[1]);
-			var w3 = Wav16DSP.mix(w1, w2);	
+			var w3 = new Wav16Mono(Wav16DSP.dspMix(w1.ints, w2.ints).dspReverse());	
 			
 			var ws1 = new WavSprite(w1, 0, 0, 0xaa0000);
 			ws1.y = 20; ws1.x = 20;
@@ -46,7 +47,7 @@ class OpenFLMixWav extends Sprite
 			this.addChild(ws3);
 			
 			#if (! html5)
-				var sound = new Sound();
+				var sound = new Sound();				
 				var soundBytearray = OpenflWav16Tools.intsToMono16ByteArray(w3.ints);
 				sound.loadPCMFromByteArray(soundBytearray, w3.ints.length, 'short', false);		
 				var soundChannel = sound.play();		
