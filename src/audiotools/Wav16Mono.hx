@@ -14,11 +14,8 @@ import sys.io.File;
  */
 class Wav16Mono extends Wav16
 {
-
 	
-	
-	
-	static public function fromBytes(wavData:Bytes) return new Wav16Mono(Wav16Tools.monoBytesToInts(wavData));
+	static public function fromBytes(wavData:Bytes, stripHeader:Bool=true) return new Wav16Mono(Wav16Tools.monoBytesToInts(wavData, stripHeader));
 	
 	#if (sys)
 	static public function fromFile(filename:String) {

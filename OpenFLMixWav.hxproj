@@ -6,8 +6,8 @@
     <movie input="" />
     <movie path="OpenFLMixWav.xml" />
     <movie fps="60" />
-    <movie width="800" />
-    <movie height="480" />
+    <movie width="1000" />
+    <movie height="600" />
     <movie version="1" />
     <movie minorVersion="0" />
     <movie platform="Lime" />

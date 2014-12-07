@@ -8,7 +8,6 @@ import haxe.io.Bytes;
  */
 class Wav16Tools 
 {
-	
 	static  inline function inRange(val: Int, min:Int, max:Int):Bool return (val >= min && val <= max);
 	
 	static public function monoBytesToInts(wavData:Bytes, stripHeader:Bool=true): WavInts
@@ -75,7 +74,7 @@ class Wav16Tools
 	
 	inline static public function shortToUChars(short:Int):Array<Int>
 	{
-		if (! inRange(short, -32767, 32767)) short = 32767; // throw 'ConversionTools: range error: $short';
+		if (! inRange(short, -32767, 32767)) throw 'ConversionTools: range error: $short';
 		var result = [0, 0];
 		if  (short >= 0)
 		{
@@ -87,8 +86,9 @@ class Wav16Tools
 		return result;
 	}
 	
-	static public function createHeader(channels:Int=1, samplingRate:Int=44100, bitsPerSample:Int=16):WAVEHeader
+	static public function createHeader(stereo:Bool=false, samplingRate:Int=44100, bitsPerSample:Int=16):WAVEHeader
 	{
+		var channels = (stereo) ? 2 : 1;
 		return {
 			format : format.wav.Data.WAVEFormat.WF_PCM,
 			channels : channels,
@@ -99,22 +99,10 @@ class Wav16Tools
 		}
 	}		
 	
-	static public function mix(w1:Wav16Mono, w2:Wav16Mono): Wav16Mono
-	{
-		var result:WavInts = [];
-		for (pos in 0...w1.ints.length)
-		{
-			var v1 = w1.ints[pos];
-			var v2 = w2.ints[pos];
-			var v3 = Math.floor((v1 + v2) / 2);
-			result.push(v3);
-		}
-		return new Wav16Mono(result);
-	}	
+
 	
 	static public function getWaveformSamples(wavInts:WavInts, nrOfSamples:Int, sampleAcc:Int=100): Array<Float>
 	{		
-		
 		var windowSize = Math.floor(wavInts.length / nrOfSamples+1);
 		//trace([leftInts.length, nrOfSamples, windowSize]);
 		var result: Array<Float> = [];
@@ -125,7 +113,6 @@ class Wav16Tools
 			var maxlevel = 0.0;
 			for (j in start...end)
 			{
-				
 				var level = Math.abs(wavInts[j]) / 32767;					
 				if (level < 0.0001) level = 0;		
 				if (j > wavInts.length) level = 0;
@@ -136,6 +123,4 @@ class Wav16Tools
 		}
 		return result;
 	}
-			
-	
 }

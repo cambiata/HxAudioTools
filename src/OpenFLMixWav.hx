@@ -4,6 +4,7 @@ import audiotools.openfl.OpenflWav16Tools;
 import audiotools.openfl.ui.WavSprite;
 import audiotools.utils.BytesLoader;
 import audiotools.utils.BytesLoaders;
+import audiotools.Wav16DSP;
 import audiotools.Wav16Mono;
 import audiotools.Wav16Stereo;
 import audiotools.Wav16Tools;
@@ -11,6 +12,8 @@ import haxe.io.Bytes;
 import openfl.display.Sprite;
 import openfl.Lib;
 import openfl.media.Sound;
+
+
 
 /**
  * ...
@@ -28,7 +31,7 @@ class OpenFLMixWav extends Sprite
 			var aBytes = Lambda.array(loadedBytes);
 			var w1 = Wav16Mono.fromBytes(aBytes[0]);
 			var w2 = Wav16Mono.fromBytes(aBytes[1]);
-			var w3 = Wav16Tools.mix(w1, w2);	
+			var w3 = Wav16DSP.mix(w1, w2);	
 			
 			var ws1 = new WavSprite(w1, 0, 0, 0xaa0000);
 			ws1.y = 20; ws1.x = 20;
@@ -42,26 +45,22 @@ class OpenFLMixWav extends Sprite
 			ws3.y = 260; ws3.x = 20;
 			this.addChild(ws3);
 			
-			
 			#if (! html5)
-			var sound = new Sound();
-			var soundBytearray = OpenflWav16Tools.intsToMono16ByteArray(w3.ints);
-			sound.loadPCMFromByteArray(soundBytearray, w3.ints.length, 'short', false);		
-			var soundChannel = sound.play();		
+				var sound = new Sound();
+				var soundBytearray = OpenflWav16Tools.intsToMono16ByteArray(w3.ints);
+				sound.loadPCMFromByteArray(soundBytearray, w3.ints.length, 'short', false);		
+				var soundChannel = sound.play();		
 			#end
 			
-			
 		}).loadBytes();		
+		
 		
 		new BytesLoader('assets/audio/stereo/sample.wav').setOnLoaded(function(bytes:Bytes, filename:String) {
 			trace('loaded $filename');
 			var wStereo = Wav16Stereo.fromBytes(bytes);
-			trace(wStereo.ints.length);
-			trace(wStereo.rightInts.length);
 			var ws = new WavSprite(wStereo);
-			ws.x = 500; ws.y = 20;
+			ws.x = 500; ws.y = 20; 
 			this.addChild(ws);
-			
 		}).loadBytes();
 		
 	}
