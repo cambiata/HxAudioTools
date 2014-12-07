@@ -85,4 +85,8 @@ class BytesLoader
 		
 	}
 
+	public function setOnLoaded(callbck: Bytes->String->Void) {
+		this.onLoaded = callbck;
+		return this;
+	}
 }

@@ -9,7 +9,7 @@
 	<app main="OpenFLMixWav" file="OpenFLMixWav" path="bin" />
 	
 	<window background="#ffffff" fps="60" />
-	<window width="800" height="480" unless="mobile" />
+	<window width="1000" height="600" unless="mobile" />
 	<window orientation="landscape" vsync="false" antialiasing="0" if="cpp" />
 	
 	<!-- classpath, haxe libs -->
@@ -22,6 +22,7 @@
 	<icon path="assets/openfl.svg" />
 	<assets path="assets/img" rename="img" />
 	<assets path="assets/audio/mono" rename="assets/audio/mono" />
+	<assets path="assets/audio/stereo" rename="assets/audio/stereo" />
 	
 	<!-- optimize output
 	<haxeflag name="-dce full" /> -->

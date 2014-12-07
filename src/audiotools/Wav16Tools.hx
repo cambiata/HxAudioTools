@@ -11,11 +11,13 @@ class Wav16Tools
 	
 	static  inline function inRange(val: Int, min:Int, max:Int):Bool return (val >= min && val <= max);
 	
-	static public function bytesToInts(wavData:Bytes): WavInts
+	static public function monoBytesToInts(wavData:Bytes, stripHeader:Bool=true): WavInts
 	{
+		var start = (stripHeader) ? 44 : 0;
+		
 		var length = Std.int((wavData.length - (wavData.length % 2)) / 2);
 		var result:WavInts = [];
-		for (i in 0...length) {
+		for (i in start...length) {
 			var pos = i * 2;
 			var left = wavData.get(pos);
 			var right = wavData.get(pos + 1);
@@ -24,6 +26,28 @@ class Wav16Tools
 		}		
 		return result;
 	}	
+	
+	static public function stereoToInts(wavData:Bytes, stripHeader:Bool=true): Array<WavInts>
+	{
+		var length = Std.int((wavData.length - (wavData.length % 2)) / 2);
+		var resultLeft:WavInts = [];
+		var resultRight:WavInts = [];
+		
+		var start = (stripHeader) ? 44 : 0;
+		
+		for (i in start...length) {
+			var pos = i * 2;
+			var left = wavData.get(pos);
+			var right = wavData.get(pos + 1);
+			var val = ucharsToShort(right, left);
+			if (i % 2 == 0) 
+				resultLeft.push(val);
+			else
+				resultRight.push(val);
+		}		
+		return [resultLeft, resultRight];
+	}		
+	
 	
 	static public function intsToMono16Bytes(ints:WavInts):Bytes
 	{
@@ -87,4 +111,31 @@ class Wav16Tools
 		}
 		return new Wav16Mono(result);
 	}	
+	
+	static public function getWaveformSamples(wavInts:WavInts, nrOfSamples:Int, sampleAcc:Int=100): Array<Float>
+	{		
+		
+		var windowSize = Math.floor(wavInts.length / nrOfSamples+1);
+		//trace([leftInts.length, nrOfSamples, windowSize]);
+		var result: Array<Float> = [];
+		for (i in 0...nrOfSamples)
+		{
+			var start = i * windowSize;
+			var end = Std.int(Math.min(start + sampleAcc, wavInts.length-1));
+			var maxlevel = 0.0;
+			for (j in start...end)
+			{
+				
+				var level = Math.abs(wavInts[j]) / 32767;					
+				if (level < 0.0001) level = 0;		
+				if (j > wavInts.length) level = 0;
+				maxlevel = Math.max(level, maxlevel);				
+			}
+			var sqr = Math.sqrt(maxlevel);
+			result.push(sqr);
+		}
+		return result;
+	}
+			
+	
 }

@@ -12,15 +12,13 @@ import sys.io.File;
  * WavData16Mono
  * @author Jonas Nyström
  */
-class Wav16Mono 
+class Wav16Mono extends Wav16
 {
-	public var ints(default, null):WavInts;
+
 	
-	public function new(ints:WavInts) {
-		this.ints = ints;
-	}
 	
-	static public function fromBytes(wavData:Bytes) return new Wav16Mono(Wav16Tools.bytesToInts(wavData));
+	
+	static public function fromBytes(wavData:Bytes) return new Wav16Mono(Wav16Tools.monoBytesToInts(wavData));
 	
 	#if (sys)
 	static public function fromFile(filename:String) {
