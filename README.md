@@ -18,11 +18,15 @@ Looking forward to learn more about bitlevel numbercrunching, efficient data str
 - native decoders for .mp3 and .ogg files
 
 ## Usage
-**Neko mix wavefiles demo**
-The demo mixes two mono waves and saves the result to disk
+**Neko mix wavefiles demo:**
+
+The demo mixes two mono waves and saves the result to disk.
+
 `haxe -lib format -cp src -neko bin/NekoMixWav.n -main NekoMixWav`
 	
-**OpenFL mix and display Wavefiles demo**
+**OpenFL mix and display wavefiles demo:**
+
 The demo loads two mono waves, mixes them and reverses the result.
 The waveforms are displayed and the reverse mix is played.
+
 `haxelib run openfl test OpenFLMixWav.xml flash|neko|mac|windows|linux`
