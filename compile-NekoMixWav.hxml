@@ -1,0 +1,1 @@
+haxe  -lib format -cp src -neko bin/NekoMixWav.n -main NekoMixWav
