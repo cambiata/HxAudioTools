@@ -2,8 +2,9 @@
 
 ![HxAudioTools.hx](/screenshot.png?raw=true "HxAudioTools.hx")
 
-Attempt to create a toolbox for audio manipulation in Haxe.
+Attempt to create a toolbox for basic audio manipulation in Haxe.
 Should work fine on Flash, Neko and Native desktop targets.
+Looking forward to learn more about bitlevel numbercrunching, efficient data structures, platform practices etc. on the road.
 
 ### Implemented: 
 - 16 bit 44kHz wav files only
