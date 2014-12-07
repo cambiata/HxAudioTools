@@ -55,7 +55,7 @@ class OpenFLMixWav extends Sprite
 			
 		}).loadBytes();		
 		
-		
+		/*
 		new BytesLoader('assets/audio/stereo/sample.wav').setOnLoaded(function(bytes:Bytes, filename:String) {
 			trace('loaded $filename');
 			var wStereo = Wav16Stereo.fromBytes(bytes);
@@ -63,6 +63,6 @@ class OpenFLMixWav extends Sprite
 			ws.x = 500; ws.y = 20; 
 			this.addChild(ws);
 		}).loadBytes();
-		
+		*/
 	}
 }
