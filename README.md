@@ -17,10 +17,10 @@ Should work fine on Flash, Neko and Native desktop targets.
 - native decoders for .mp3 and .ogg files
 
 ## Usage
-### Neko mix wavefiles demo
+**Neko mix wavefiles demo**
 
 `haxe -lib format -cp src -neko bin/NekoMixWav.n -main NekoMixWav`
 	
-### OpenFL mix and display Wavefiles demo
+**OpenFL mix and display Wavefiles demo**
 
 `haxelib run openfl test OpenFLMixWav.xml flash|neko|mac|windows|linux`
