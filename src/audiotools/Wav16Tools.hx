@@ -63,6 +63,26 @@ class Wav16Tools
 		return result;
 	}	
 	
+	static public function intsToStero16Bytes(leftInts:Vector<Int>, rightInts:Vector<Int>):Bytes
+	{
+		if (leftInts.length != rightInts.length) throw "Left and Right ints lengths differ!";
+		var result:Bytes = Bytes.alloc(leftInts.length * 2 * 2);
+		var pos = 0;
+		for (i in 0...leftInts.length)
+		{
+			var v = leftInts.get(i);
+			var a = shortToUChars(v);
+			result.set(pos++, a[1]);
+			result.set(pos++, a[0]);
+			
+			var v = rightInts.get(i);
+			var a = shortToUChars(v);
+			result.set(pos++, a[1]);
+			result.set(pos++, a[0]);			
+		}
+		return result;
+	}		
+	
 	static public function ucharsToShort(ucharLeft:Int, ucharRight:Int):Int
 	{
 		if (ucharLeft < 0) ucharLeft += 256;

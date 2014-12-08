@@ -1,4 +1,4 @@
 @echo off
 cd bin
-neko NekoMixWav.n
+neko Mp3DecodeNeko.n
 pause

@@ -4,6 +4,7 @@ import audiotools.openfl.OpenflWav16Tools;
 import audiotools.openfl.ui.WavSprite;
 import audiotools.utils.BytesLoader;
 import audiotools.utils.BytesLoaders;
+import audiotools.utils.Mp3Wav16Decoder;
 import audiotools.Wav16DSP;
 import audiotools.Wav16Mono;
 import audiotools.Wav16Stereo;
@@ -26,6 +27,7 @@ class OpenFLMixWav extends Sprite
 	public function new() 
 	{
 		super();
+				
 		new BytesLoaders(['assets/audio/mono/sample.wav', 'assets/audio/mono/leadvox.wav']).setOnLoaded(function(loadedBytes:Map<String, Bytes>) {
 			var aBytes = Lambda.array(loadedBytes);
 			var w1 = Wav16Mono.fromBytes(aBytes[0]);
@@ -52,12 +54,18 @@ class OpenFLMixWav extends Sprite
 			#end
 		}).loadBytes();		
 		
-		new BytesLoader('assets/audio/stereo/sample.wav').setOnLoaded(function(bytes:Bytes, filename:String) {
-			trace('loaded $filename');
-			var wStereo = Wav16Stereo.fromBytes(bytes, true);
-			var ws = new WavSprite(wStereo);
-			ws.x = 500; ws.y = 20; 
-			this.addChild(ws);
-		}).loadBytes();
+		
+		new Mp3Wav16Decoder('assets/audio/stereo/sample.mp3').setConvertedHandler(function(wav16, filename) {
+			trace(Type.getClassName(Type.getClass(wav16)));
+			trace(wav16.ints.length);			
+			var ws1 = new WavSprite(wav16, 0, 0, 0xaa0000);
+			ws1.y = 20; ws1.x = 420;
+			this.addChild(ws1);			
+		})
+		.execute(); 		
+		
+		
+		
+		
 	}
 }

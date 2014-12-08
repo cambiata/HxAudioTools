@@ -4,7 +4,7 @@
   <output>
     <movie outputType="CustomBuild" />
     <movie input="" />
-    <movie path="OpenFLMixWav.xml" />
+    <movie path="MixWavOpenFl.xml" />
     <movie fps="60" />
     <movie width="1000" />
     <movie height="600" />
@@ -22,7 +22,7 @@
     <class path="f:\_haxelib\actuate\1,7,5" />
     <class path="src" />
     <class path="f:\_haxelib\lime\2,0,0-beta\legacy" />
-    <class path="bin\windows\neko\haxe" />
+    <class path="bin\windows\cpp\haxe" />
   </classpaths>
   <!-- Build options -->
   <build>
@@ -31,7 +31,7 @@
     <option noInlineOnDebug="False" />
     <option mainClass="ApplicationMain" />
     <option enabledebug="True" />
-    <option additional="--remap flash:openfl&#xA;#--macro keep(&quot;OpenFLMixWav&quot;)&#xA;-debug " />
+    <option additional="--remap flash:openfl&#xA;#--macro keep(&quot;OpenFLMixWav&quot;)" />
   </build>
   <!-- haxelib libraries -->
   <haxelib>

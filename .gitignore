@@ -1,3 +1,5 @@
 bin/flash/*
 bin/windows/*
 bin/html5/*
+bin/*.n
+bin/*.swf

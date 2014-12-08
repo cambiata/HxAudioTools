@@ -4,7 +4,7 @@
   <output>
     <movie outputType="Application" />
     <movie input="" />
-    <movie path="bin\NekoMixWav.n" />
+    <movie path="bin\MixWavNeko.n" />
     <movie fps="0" />
     <movie width="0" />
     <movie height="0" />
@@ -45,9 +45,9 @@
   <postBuildCommand alwaysRun="False" />
   <!-- Other project options -->
   <options>
-    <option showHiddenPaths="False" />
+    <option showHiddenPaths="True" />
     <option testMovie="Custom" />
-    <option testMovieCommand="run.bat" />
+    <option testMovieCommand="RunMixWavNeko.bat" />
   </options>
   <!-- Plugin storage -->
   <storage />

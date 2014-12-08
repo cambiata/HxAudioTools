@@ -1,7 +1,12 @@
 package audiotools.openfl.utils;
 import haxe.io.Bytes;
 import haxe.io.BytesData;
+#if(openfl)
 import openfl.utils.ByteArray;
+#else
+import flash.utils.ByteArray;
+#end
+
 
 /**
  * ByteArrayTools
