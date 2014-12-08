@@ -1,5 +1,6 @@
 package;
 
+import audio.flash.SoundTools;
 import audiotools.openfl.OpenflWav16Tools;
 import audiotools.openfl.ui.WavSprite;
 import audiotools.openfl.utils.ByteArrayTools;
@@ -49,11 +50,9 @@ class Mp3DecodeFlash
 			ws.y = 120 * 2 + 20; ws.x = 20;
 			Lib.current.addChild(ws);	
 			
-			/*
-			var s = new Sound();
-			s.loadPCMFromByteArray(OpenflWav16Tools.intsToMono16ByteArray(wMixedReverse.ints), wMixedReverse.ints.length, 'short');
-			s.play(0);
-			*/
+			SoundTools.buildSound(OpenflWav16Tools.intsToStereo16ByteArray(wMixedReverse.leftInts, wMixedReverse.rightInts), SoundTools.stereo16format(wMixedReverse.ints.length), function(sound) {
+				sound.play(0);
+			});
 			
 		}		
 		decoders.startDecoding();				

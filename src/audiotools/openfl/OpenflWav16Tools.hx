@@ -19,5 +19,9 @@ class OpenflWav16Tools
 	{
 		return ByteArrayTools.fromBytes(Wav16Tools.intsToMono16Bytes(ints));	
 	}
+	
+	static public function intsToStereo16ByteArray(leftInts:Vector<Int>, rightInts:Vector<Int>):ByteArray {
+		return ByteArrayTools.fromBytes(Wav16Tools.intsToStero16Bytes(leftInts, rightInts));
+	}
 }
 

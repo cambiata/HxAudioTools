@@ -96,7 +96,10 @@ class Wav16Tools
 	
 	inline static public function shortToUChars(short:Int):Array<Int>
 	{
-		if (! inRange(short, -32767, 32767)) throw 'Range error: $short';
+		if (! inRange(short, -32767, 32767)) {
+			trace('Range error: $short');
+			return [0, 0]; // throw 
+		}
 		var result = [0, 0];
 		if  (short >= 0)
 		{
