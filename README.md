@@ -9,15 +9,15 @@ Looking forward to learn more about bitlevel numbercrunching, efficient data str
 Note! Early development - a lot of experimenting and fiddling going on. Don't expect things to be stable and production ready!
 
 ### Implemented: 
-- 16 bit 44kHz wav files only
-- Platform agnostic signal processing (DSP): mixing, fading, reversing - should work on all platforms
-- platform specific Mp3 decoding (flash relies on Sound.extract(), webAudio relies on AudioBuffer data, **neko/cpp relies on SOX utility installed!**)
-- waveform display using OpenFL or Html5 Canvas
+- 16 bit 44kHz wav files, mono and stereo
+- mp3 decoding per platform (flash relies on Sound.extract(), webAudio relies on AudioBuffer data, **neko/cpp relies on SOX utility installed!**)
+- basic signal processing (DSP): mixing, fading, reversing - should work on all platforms
+- waveform display using OpenFL or html5/canvas
 
 ### Hopes and plans:
 - cool DSP features, as fading, crossfading, dynamic mainpulation, timestretching, pitchshifting
 - FFT implementation for freq spectrum display
-- compatibility with Web Audio API
+- pitch recognition implementations
 - haxe native decoders for .mp3 and .ogg files
 
 ### Demos
