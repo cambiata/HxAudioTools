@@ -24,7 +24,7 @@ Note! Early development - a lot of experimenting and fiddling going on. Don't ex
 
 ![webaudio](/webaudio.png?raw=true "webaudio")
 
-[Live WebAudioApi demo](https://cdn.rawgit.com/cambiata/HxAudioTools/master/bin/index.html)
+[Live WebAudioApi demo](https://cdn.rawgit.com/cambiata/HxAudioTools/master/bin/mp3/index.html)
 - loads two mp3-files
 - decodes them to PCM sound data using WebAudioApi context decoder
 - displays the waveforms on canvas
@@ -33,7 +33,7 @@ Note! Early development - a lot of experimenting and fiddling going on. Don't ex
 
 ![flash](/flash.png?raw=true "flash")
 
-[Live Flash demo](https://cdn.rawgit.com/cambiata/HxAudioTools/master/bin/Mp3DecodeFlash.swf)
+[Live Flash demo](https://cdn.rawgit.com/cambiata/HxAudioTools/master/bin/mp3/Mp3DecodeFlash.swf)
 - loads two mp3-files
 - decodes them to PCM sound data using flash.media.Sound.extract()
 - displays the waveforms on flash.display.Sprite
