@@ -20,16 +20,6 @@ Note! Early development - a lot of experimenting and fiddling going on. Don't ex
 - compatibility with Web Audio API
 - haxe native decoders for .mp3 and .ogg files
 
-## Usage
-**Neko mix wavefiles demo:**
+### Demo
 
-The demo mixes two mono waves and saves the result to disk.
-
-`haxe -lib format -cp src -neko bin/NekoMixWav.n -main NekoMixWav`
-	
-**OpenFL mix and display wavefiles demo:**
-
-The demo loads two mono waves, mixes them and reverses the result.
-The waveforms are displayed and the reverse mix is played.
-
-`haxelib run openfl test OpenFLMixWav.xml flash|neko|mac|windows|linux`
+[Live WebAudioApi demo](https://cdn.rawgit.com/cambiata/HxAudioTools/master/bin/index.html)
