@@ -22,7 +22,7 @@
     <class path="f:\_haxelib\actuate\1,7,5" />
     <class path="src" />
     <class path="f:\_haxelib\lime\2,0,0-beta\legacy" />
-    <class path="bin\windows\cpp\haxe" />
+    <class path="bin\windows\neko\haxe" />
   </classpaths>
   <!-- Build options -->
   <build>

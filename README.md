@@ -9,13 +9,14 @@ Looking forward to learn more about bitlevel numbercrunching, efficient data str
 ### Implemented: 
 - 16 bit 44kHz wav files only
 - simple DSP: mixing, fading, reversing
+- platform specific Mp3 decoding (flash relies on Sound.extract(), webAudio relies on AudioBuffer data, **neko/cpp relies on SOX utility installed!**)
 - waveform display using OpenFL
 
 ### Hopes and plans:
 - cool DSP features, as fading, crossfading, dynamic mainpulation, timestretching, pitchshifting
 - FFT implementation for freq spectrum display
 - compatibility with Web Audio API
-- native decoders for .mp3 and .ogg files
+- haxe native decoders for .mp3 and .ogg files
 
 ## Usage
 **Neko mix wavefiles demo:**
