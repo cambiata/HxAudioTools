@@ -22,6 +22,8 @@ Note! Early development - a lot of experimenting and fiddling going on. Don't ex
 
 ### Demo
 
+![webaudio](/webaudio.png?raw=true "webaudio")
+
 This demo 
 - loads two mp3-files
 - decodes them to PCM sound data using WebAudioApi context decoder
