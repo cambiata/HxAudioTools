@@ -1,5 +1,4 @@
 package audiotools;
-import audiotools.WavInts;
 import format.wav.Reader;
 import format.wav.Writer;
 import haxe.io.Bytes;

@@ -23,11 +23,9 @@ using audiotools.Wav16DSP;
 
 class OpenFLMixWav extends Sprite 
 {
-
 	public function new() 
 	{
 		super();
-		
 		new BytesLoaders(['assets/audio/mono/sample.wav', 'assets/audio/mono/leadvox.wav']).setOnLoaded(function(loadedBytes:Map<String, Bytes>) {
 			var aBytes = Lambda.array(loadedBytes);
 			var w1 = Wav16Mono.fromBytes(aBytes[0]);
@@ -52,17 +50,14 @@ class OpenFLMixWav extends Sprite
 				sound.loadPCMFromByteArray(soundBytearray, w3.ints.length, 'short', false);		
 				var soundChannel = sound.play();		
 			#end
-			
 		}).loadBytes();		
 		
-		/*
 		new BytesLoader('assets/audio/stereo/sample.wav').setOnLoaded(function(bytes:Bytes, filename:String) {
 			trace('loaded $filename');
-			var wStereo = Wav16Stereo.fromBytes(bytes);
+			var wStereo = Wav16Stereo.fromBytes(bytes, true);
 			var ws = new WavSprite(wStereo);
 			ws.x = 500; ws.y = 20; 
 			this.addChild(ws);
 		}).loadBytes();
-		*/
 	}
 }

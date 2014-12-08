@@ -1,7 +1,8 @@
 package audiotools;
+import haxe.ds.Vector;
 
 /**
  * @author Jonas Nyström
  */
 
-typedef WavInts = Array<Int>;
+typedef WavInts = Vector<Int>;

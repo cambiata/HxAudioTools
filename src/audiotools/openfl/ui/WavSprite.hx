@@ -5,10 +5,10 @@ package audiotools.openfl.ui;
  * @author Jonas Nyström
  */
 import audiotools.Wav16;
-import audiotools.WavInts;
 import format.wav.Reader;
 import format.wav.Data;
 import audiotools.openfl.utils.ByteArrayTools;
+import haxe.ds.Vector;
 import haxe.io.Bytes;
 import haxe.io.BytesInput;
 import haxe.macro.Format;
@@ -24,8 +24,8 @@ import audiotools.Wav16Tools;
 class WavSprite extends ResizeSprite
 {
 	/*
-	var leftInts:WavInts;
-	var rightInts:WavInts;
+	var leftInts:Vector<Int>;
+	var rightInts:Vector<Int>;
 	*/
 	var wav16:Wav16;
 	
@@ -54,7 +54,11 @@ class WavSprite extends ResizeSprite
 	}
 	*/
 	
+	
+	
+	
 	public function new(wav16:Wav16, width:Float = 0, height:Float = 100, leftColor:Int=0x0000aa, rightColor:Int=0xaa0000,  autosize:Float=3.0) {
+		/*
 		this.wav16 = wav16;
 		this.graphSamplesLeft = Wav16Tools.getWaveformSamples(this.wav16.ints, 1000);
 		this.stereo = Std.is(wav16, Wav16Stereo);
@@ -62,6 +66,10 @@ class WavSprite extends ResizeSprite
 		if (stereo) {
 			this.graphSamplesRight = Wav16Tools.getWaveformSamples(cast(wav16, Wav16Stereo).rightInts, 1000);
 		}
+		*/
+
+		this.init(wav16, false);
+		
 		this.leftColor = leftColor;
 		this.rightColor = rightColor;
 		
@@ -71,6 +79,18 @@ class WavSprite extends ResizeSprite
 		} else
 			super(0, 0, width, height, 0x000000, 0.2);
 	}
+	
+	function init(wav16:Wav16, redraw:Bool = true){
+		this.wav16 = wav16;
+		this.graphSamplesLeft = Wav16Tools.getWaveformSamples(this.wav16.ints, 1000);
+		this.stereo = Std.is(wav16, Wav16Stereo);		
+		if (stereo) {
+			this.graphSamplesRight = Wav16Tools.getWaveformSamples(cast(wav16, Wav16Stereo).rightInts, 1000);
+		}		
+		
+		if (redraw) this._draw();
+	}
+	
 	
 	static var LINEWIDTH:Float = 1.4;
 	var leftColor:Int;
@@ -156,7 +176,7 @@ class WavSprite extends ResizeSprite
 	}
 	
 	
-	public function getInts():Array<WavInts>
+	public function getInts():Array<Vector<Int>>
 	{
 		if (stereo) return [this.wav16.ints, cast(this.wav16, Wav16Stereo).rightInts];
 		return [this.wav16.ints];

@@ -1,5 +1,5 @@
 package audiotools;
-import audiotools.WavInts;
+import haxe.ds.Vector;
 import haxe.io.Bytes;
 
 /**
@@ -8,11 +8,11 @@ import haxe.io.Bytes;
  */
 class Wav16Stereo extends Wav16
 {
-	public var rightInts(default, null):WavInts;
-	public var leftInts(get, null):WavInts;
+	public var rightInts(default, null):Vector<Int>;
+	public var leftInts(get, null):Vector<Int>;
 	function get_leftInts() return this.ints;
 	
-	public function new(leftInts:WavInts, rightInts:WavInts) {
+	public function new(leftInts:Vector<Int>, rightInts:Vector<Int>) {
 		this.rightInts = rightInts;
 		super(leftInts);
 	}
