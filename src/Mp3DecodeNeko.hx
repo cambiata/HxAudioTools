@@ -21,7 +21,7 @@ class Mp3DecodeNeko
 		}).execute();		
 		*/
 		
-		new Mp3Wav16Decoder('sample.mp3').setConvertedHandler(function(wav16, filename) {
+		new Mp3Wav16Decoder('sample.mp3').setDecodedHandler(function(wav16, filename) {
 			trace(Type.getClassName(Type.getClass(wav16)));
 			trace(wav16.ints.length);
 		}).execute(); 

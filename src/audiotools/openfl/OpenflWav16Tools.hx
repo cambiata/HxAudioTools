@@ -4,7 +4,7 @@ import audiotools.Wav16Tools;
 import haxe.ds.Vector;
 import haxe.io.Bytes;
 import haxe.io.BytesData;
-import openfl.utils.ByteArray;
+import flash.utils.ByteArray;
 
 
 

@@ -55,7 +55,7 @@ class OpenFLMixWav extends Sprite
 		}).loadBytes();		
 		
 		
-		new Mp3Wav16Decoder('assets/audio/stereo/sample.mp3').setConvertedHandler(function(wav16, filename) {
+		new Mp3Wav16Decoder('assets/audio/stereo/sample.mp3').setDecodedHandler(function(wav16, filename) {
 			trace(Type.getClassName(Type.getClass(wav16)));
 			trace(wav16.ints.length);			
 			var ws1 = new WavSprite(wav16, 0, 0, 0xaa0000);

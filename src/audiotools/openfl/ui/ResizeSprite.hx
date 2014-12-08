@@ -1,12 +1,12 @@
 package audiotools.openfl.ui;
 
 
-import openfl.display.Graphics;
-import openfl.display.Sprite;
-import openfl.Lib;
-import openfl.events.MouseEvent;
-import openfl.events.Event;
-import openfl.geom.Rectangle;
+import flash.display.Graphics;
+import flash.display.Sprite;
+import flash.Lib;
+import flash.events.MouseEvent;
+import flash.events.Event;
+import flash.geom.Rectangle;
 
 /**
  * ResizeSprite

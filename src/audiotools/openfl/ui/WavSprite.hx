@@ -12,10 +12,18 @@ import haxe.ds.Vector;
 import haxe.io.Bytes;
 import haxe.io.BytesInput;
 import haxe.macro.Format;
+import audiotools.Wav16Tools;
+
+#if (openfl)
 import openfl.display.Sprite;
 import openfl.Lib;
 import openfl.utils.ByteArray;
-import audiotools.Wav16Tools;
+#else
+import flash.display.Sprite;
+import flash.Lib;
+import flash.utils.ByteArray;
+#end
+
 
 /**
  * WavSprite

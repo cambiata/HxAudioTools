@@ -6,6 +6,8 @@ Attempt to create a toolbox for basic audio manipulation in Haxe.
 Should work fine on Flash, Neko and Native desktop targets.
 Looking forward to learn more about bitlevel numbercrunching, efficient data structures, platform practices etc. on the road.
 
+Note! Early development - a lot of experimenting and fiddling going on. Don't expect things to be stable and production ready!
+
 ### Implemented: 
 - 16 bit 44kHz wav files only
 - simple DSP: mixing, fading, reversing
