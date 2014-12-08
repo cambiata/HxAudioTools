@@ -8,7 +8,7 @@ import js.html.Float32Array;
  * AudioBufferUtils
  * @author Jonas Nyström
  */
-class AudioBufferUtils 
+class WebAudioTools 
 {
 	static public function createBufferFromWav16(wav16:Wav16, context:AudioContext):AudioBuffer {
 		
@@ -46,5 +46,26 @@ class AudioBufferUtils
 		return newbuffer;
 		
 	}
+	
+	static public function getAudioContext():AudioContext
+	{
+		var context:AudioContext = null;
+		untyped __js__ ('
+			if (typeof AudioContext == "function") {
+				context = new AudioContext();
+				console.log("USING STANDARD WEB AUDIO API");
+				//alert("Standard Web Audio Api");
+			} else if ((typeof webkitAudioContext == "function") || (typeof webkitAudioContext == "object")) {
+				context = new webkitAudioContext();
+				console.log("USING WEBKIT AUDIO API");
+				alert("Using Webkit Web Audio Api");
+			} else {
+				alert("AudioContext is not supported.");
+				throw new Error("AudioContext is not supported. :(");
+			}
+		');
+		return context;
+	}	
+	
 
 }

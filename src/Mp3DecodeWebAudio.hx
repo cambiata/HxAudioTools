@@ -9,7 +9,7 @@ import audiotools.Wav16Mono;
 import audiotools.Wav16Stereo;
 import audiotools.Wav16Tools;
 import audiotools.webaudio.Mp3ToBuffer;
-import audiotools.webaudio.utils.AudioBufferUtils;
+import audiotools.webaudio.utils.WebAudioTools;
 import audiotools.webaudio.utils.Wav16Canvas;
 import haxe.ds.Vector;
 import haxe.io.Bytes;
@@ -35,7 +35,8 @@ class Mp3DecodeWebAudio
 	static function main() 
 	{
 		
-		var context = new AudioContext();		
+		var context = WebAudioTools.getAudioContext();
+		
 		var decoders = new Mp3Wav16Decoders(['sample.mp3', 'leadvox.mp3'], context);		
 		decoders.allDecoded = function(decodedFiles:Map<String, Wav16>) {
 			for (filename in decodedFiles.keys()) {
@@ -53,7 +54,7 @@ class Mp3DecodeWebAudio
 			Wav16Canvas.drawWave(canvas, w3, 400, 100);
 			
 			var source = context.createBufferSource();
-			source.buffer = AudioBufferUtils.createBufferFromWav16(w3, context);
+			source.buffer = WebAudioTools.createBufferFromWav16(w3, context);
 			source.connect(context.destination, 0, 0);				
 			source.start(0);		
 			
