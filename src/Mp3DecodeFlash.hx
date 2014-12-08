@@ -1,6 +1,6 @@
 package;
 
-import audio.flash.SoundTools;
+import audiotools.flash.SoundTools;
 import audiotools.openfl.OpenflWav16Tools;
 import audiotools.openfl.ui.WavSprite;
 import audiotools.openfl.utils.ByteArrayTools;

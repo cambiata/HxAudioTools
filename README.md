@@ -20,15 +20,22 @@ Note! Early development - a lot of experimenting and fiddling going on. Don't ex
 - compatibility with Web Audio API
 - haxe native decoders for .mp3 and .ogg files
 
-### Demo
+### Demos
 
 ![webaudio](/webaudio.png?raw=true "webaudio")
 
-This demo 
+[Live WebAudioApi demo](https://cdn.rawgit.com/cambiata/HxAudioTools/master/bin/index.html)
 - loads two mp3-files
 - decodes them to PCM sound data using WebAudioApi context decoder
 - displays the waveforms on canvas
 - mixes the sounddata, and reverses the result
 - plays back the result using WebAudioApi context
 
-[Live WebAudioApi demo](https://cdn.rawgit.com/cambiata/HxAudioTools/master/bin/index.html)
+[Live Flash demo](https://cdn.rawgit.com/cambiata/HxAudioTools/master/bin/Mp3DecodeFlash.swf)
+- loads two mp3-files
+- decodes them to PCM sound data using flash.media.Sound.extract()
+- displays the waveforms on flash.display.Sprite
+- mixes the sounddata, and reverses the result
+- builds a sound object swf to avoid Sound.loadPCMfromByteArray() quirks
+- plays back the result
+	

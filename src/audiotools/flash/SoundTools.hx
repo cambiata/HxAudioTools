@@ -1,4 +1,4 @@
-package audio.flash;
+package audiotools.flash;
 import flash.display.Loader;
 import flash.display.LoaderInfo;
 import flash.events.Event;
