@@ -31,6 +31,8 @@ Note! Early development - a lot of experimenting and fiddling going on. Don't ex
 - mixes the sounddata, and reverses the result
 - plays back the result using WebAudioApi context
 
+![flash](/flash.png?raw=true "flash")
+
 [Live Flash demo](https://cdn.rawgit.com/cambiata/HxAudioTools/master/bin/Mp3DecodeFlash.swf)
 - loads two mp3-files
 - decodes them to PCM sound data using flash.media.Sound.extract()
