@@ -58,7 +58,7 @@ class WebAudioTools
 			} else if ((typeof webkitAudioContext == "function") || (typeof webkitAudioContext == "object")) {
 				context = new webkitAudioContext();
 				console.log("USING WEBKIT AUDIO API");
-				alert("Using Webkit Web Audio Api");
+				//alert("Using Webkit Web Audio Api");
 			} else {
 				alert("AudioContext is not supported.");
 				throw new Error("AudioContext is not supported. :(");

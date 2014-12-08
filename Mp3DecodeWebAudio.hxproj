@@ -4,7 +4,7 @@
   <output>
     <movie outputType="Application" />
     <movie input="" />
-    <movie path="bin\Mp3DecodeWebAudio.js" />
+    <movie path="bin\mp3\Mp3DecodeWebAudio.js" />
     <movie fps="0" />
     <movie width="0" />
     <movie height="0" />
