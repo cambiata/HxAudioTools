@@ -23,7 +23,6 @@ using audiotools.Wav16DSP;
 
 class Mp3DecodeFlash 
 {
-	
 	static function main() 
 	{
 		var stage = Lib.current.stage;
