@@ -82,7 +82,7 @@ class WavSprite extends ResizeSprite
 		this.rightColor = rightColor;
 		
 		if (width == 0) {
-			var autowidth = this.wav16.ints.length / 44100 * autosize * 10;
+			var autowidth = this.wav16.ch1.length / 44100 * autosize * 10;
 			super(0, 0, autowidth, 100, 0x000000, 0.2);
 		} else
 			super(0, 0, width, height, 0x000000, 0.2);
@@ -90,10 +90,10 @@ class WavSprite extends ResizeSprite
 	
 	function init(wav16:Wav16, redraw:Bool = true){
 		this.wav16 = wav16;
-		this.graphSamplesLeft = Wav16Tools.getWaveformSamples(this.wav16.ints, 1000);
-		this.stereo = Std.is(wav16, Wav16Stereo);		
+		this.graphSamplesLeft = Wav16Tools.getWaveformSamples(this.wav16.ch1, 1000);
+		this.stereo = wav16.stereo;		
 		if (stereo) {
-			this.graphSamplesRight = Wav16Tools.getWaveformSamples(cast(wav16, Wav16Stereo).rightInts, 1000);
+			this.graphSamplesRight = Wav16Tools.getWaveformSamples(wav16.ch2, 1000);
 		}		
 		
 		if (redraw) this._draw();
@@ -109,8 +109,8 @@ class WavSprite extends ResizeSprite
 		gr.clear();
 		
 		if (width > this.graphSamplesLeft.length) {
-			this.graphSamplesLeft = Wav16Tools.getWaveformSamples(this.wav16.ints, Math.floor(width + 500));
-			if (stereo) this.graphSamplesRight = Wav16Tools.getWaveformSamples(cast(wav16, Wav16Stereo).rightInts, Math.floor(width + 500));
+			this.graphSamplesLeft = Wav16Tools.getWaveformSamples(this.wav16.ch1, Math.floor(width + 500));
+			if (stereo) this.graphSamplesRight = Wav16Tools.getWaveformSamples(wav16.ch2, Math.floor(width + 500));
 		}
 		
 		var maxlevel = height / 2;				
@@ -186,8 +186,8 @@ class WavSprite extends ResizeSprite
 	
 	public function getInts():Array<Vector<Int>>
 	{
-		if (stereo) return [this.wav16.ints, cast(this.wav16, Wav16Stereo).rightInts];
-		return [this.wav16.ints];
+		if (stereo) return [this.wav16.ch1, this.wav16.ch2];
+		return [this.wav16.ch1];
 	}
 	
 	public function getStereo():Bool return this.stereo;

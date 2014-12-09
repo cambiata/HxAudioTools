@@ -12,12 +12,12 @@ class WebAudioTools
 {
 	static public function createBufferFromWav16(wav16:Wav16, context:AudioContext):AudioBuffer {
 		
-		var stereo = Type.getClass(wav16) == Wav16Stereo;		
-		var length = wav16.ints.length;
+		var stereo = wav16.stereo;		
+		var length = wav16.ch1.length;
 		
 		var left:Float32Array = new Float32Array(length);
 		var pos = 0;
-		for (int in wav16.ints) {
+		for (int in wav16.ch1) {
 			left[pos] = int / 32767;
 			pos++;
 		}		
@@ -26,7 +26,7 @@ class WebAudioTools
 		if (stereo) {
 			right = new Float32Array(length);
 			var pos = 0;
-			for (int in cast(wav16, Wav16Stereo).rightInts) {
+			for (int in wav16.ch2) {
 				right[pos] = int / 32767;
 				pos++;
 			}			

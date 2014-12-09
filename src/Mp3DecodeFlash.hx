@@ -8,8 +8,6 @@ import audiotools.utils.Mp3Decoder;
 import audiotools.utils.Mp3Wav16Decoder;
 import audiotools.utils.Mp3Wav16Decoders;
 import audiotools.Wav16;
-import audiotools.Wav16Mono;
-import audiotools.Wav16Stereo;
 import flash.display.StageAlign;
 import flash.display.StageScaleMode;
 import flash.Lib;
@@ -37,19 +35,19 @@ class Mp3DecodeFlash
 				var ws = new WavSprite(wav16, 0, 0, 0xaa0000);
 				ws.y = 120 * i + 20; ws.x = 20;
 				Lib.current.addChild(ws);								
-				trace(wav16.ints.length);				
+				trace(wav16.ch1.length);				
 				i++;
 			}				
 			
-			var w0 = cast(decodedFiles.get('sample.mp3'), Wav16Stereo);
-			var w1 = cast(decodedFiles.get('leadvox.mp3'), Wav16Stereo);			
-			w0.leftInts.dspMix(w1.ints).dspReverse();			
-			var wMixedReverse = new Wav16Stereo(w0.leftInts.dspMix(w1.leftInts).dspReverse(),  w0.rightInts.dspMix(w1.rightInts).dspReverse());
+			var w0 = decodedFiles.get('sample.mp3'); // cast(decodedFiles.get('sample.mp3'), Wav16Stereo);
+			var w1 = decodedFiles.get('leadvox.mp3'); // cast(decodedFiles.get('leadvox.mp3'), Wav16Stereo);			
+			w0.ch1.dspMix(w1.ch1).dspReverse();			
+			var wMixedReverse = new Wav16(w0.ch1.dspMix(w1.ch1).dspReverse(),  w0.ch2.dspMix(w1.ch2).dspReverse());
 			var ws = new WavSprite(wMixedReverse, 0, 0, 0x0000aa, 0x0000aa);
 			ws.y = 120 * 2 + 20; ws.x = 20;
 			Lib.current.addChild(ws);	
 			
-			SoundTools.buildSound(OpenflWav16Tools.intsToStereo16ByteArray(wMixedReverse.leftInts, wMixedReverse.rightInts), SoundTools.stereo16format(wMixedReverse.ints.length), function(sound) {
+			SoundTools.buildSound(OpenflWav16Tools.intsToStereo16ByteArray(wMixedReverse.ch1, wMixedReverse.ch2), SoundTools.stereo16format(wMixedReverse.ch1.length), function(sound) {
 				sound.play(0);
 			});
 			

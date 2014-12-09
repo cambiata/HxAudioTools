@@ -3,8 +3,6 @@ package audiotools.utils;
 
 
 import audiotools.Wav16;
-import audiotools.Wav16Mono;
-import audiotools.Wav16Stereo;
 import haxe.ds.Vector;
 import haxe.io.Bytes;
 
@@ -60,7 +58,7 @@ class Mp3Wav16Decoder
 		
 		FileSystem.deleteFile(tempFilename);
 		var aInts = Wav16Tools.stereoToInts(wavBytes, true);
-		var w16 = new Wav16Stereo(aInts[0], aInts[1]);
+		var w16 = new Wav16(aInts[0], aInts[1]);
 		this.converted(w16, this.mp3filename);
 	}
 	#end
@@ -82,7 +80,7 @@ class Mp3Wav16Decoder
 				
 				var wavBytes = ByteArrayTools.toBytes(wavEncodedByteArray);
 				var aInts = Wav16Tools.stereoToInts(wavBytes, true);
-				var w16 = new Wav16Stereo(aInts[0], aInts[1]);			
+				var w16 = new Wav16(aInts[0], aInts[1]);			
 				this.converted(w16, this.mp3filename);			
 			});
 		}
@@ -108,7 +106,6 @@ class Mp3Wav16Decoder
 				var wavBytes:Bytes = null;
 					
 				var left:Float32Array = buffer.getChannelData(0);
-				trace('ll ' + left.length);
 				var leftInts = new Vector<Int>(left.length);				
 				var pos = 0;
 				for (n in left) {
@@ -126,22 +123,12 @@ class Mp3Wav16Decoder
 						rightInts.set(pos, Std.int(n * 32767));
 						pos++;
 					}
-					wavBytes = Wav16Tools.intsToStero16Bytes(leftInts, rightInts);	
-					w16 = new Wav16Stereo(leftInts, rightInts);
-					
+					w16 = new Wav16(leftInts, rightInts);
 				} else {
-					wavBytes = Wav16Tools.intsToMono16Bytes(leftInts);
-					w16 = new Wav16Mono(leftInts);
+					w16 = new Wav16(leftInts);
 				}				
-				
-				/*
-				var aInts = Wav16Tools.stereoToInts(wavBytes, true);
-			trace(this.mp3filename);
-				trace([aInts[0].length, aInts[1].length] );
-				var w16 = new Wav16Stereo(aInts[0], aInts[1]);		
-				*/
+
 				this.converted(w16, this.mp3filename);							
-				
 				
 			}).load();		
 			
@@ -149,7 +136,7 @@ class Mp3Wav16Decoder
 	#end
 	
 	dynamic public function converted(wav16:Wav16, mp3Filename:String) {
-		trace(wav16.ints.length);
+		trace(wav16.ch1.length);
 		trace(mp3filename);
 	}
 	

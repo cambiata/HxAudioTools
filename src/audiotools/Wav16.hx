@@ -18,15 +18,15 @@ import sys.io.File;
 class Wav16 
 {
 
-	public var ints(default, null):Vector<Int>;
-	public var ints2(default, null):Vector<Int>;	
+	public var ch1(default, null):Vector<Int>;
+	public var ch2(default, null):Vector<Int>;	
 	public var stereo(default, null):Bool = false;
 	
 	public function new(channel1:Vector<Int>, channel2:Vector<Int>=null) {
-		this.ints = channel1;
-		this.ints2 = channel2;
-		if (this.ints2 != null && this.ints2.length != this.ints.length) throw "Stereo file ints must have same length";
-		this.stereo = (this.ints2 != null);
+		this.ch1 = channel1;
+		this.ch2 = channel2;
+		if (this.ch2 != null && this.ch2.length != this.ch1.length) throw "Stereo file ints must have same length";
+		this.stereo = (this.ch2 != null);
 	}
 	
 	static public function fromFileBytes(wavfileBytes:Bytes):Wav16  {
@@ -39,10 +39,10 @@ class Wav16
 		
 		if (stereo) {
 			var aInts = Wav16Tools.stereoToInts(data, false);
-			w16 = new Wav16Stereo(aInts[0], aInts[1]);
+			w16 = new Wav16(aInts[0], aInts[1]);
 		} else {
 			var ints = Wav16Tools.monoBytesToInts(data, false);
-			w16 = new Wav16Mono(ints);
+			w16 = new Wav16(ints);
 		}
 			
 		return w16;
@@ -55,7 +55,7 @@ class Wav16
 	
 	public function saveFile(filename:String) {		
 		var header = Wav16Tools.createHeader(this.stereo);
-		var data = (this.stereo) ? Wav16Tools.intsToStero16Bytes(this.ints, this.ints2) : Wav16Tools.intsToMono16Bytes(this.ints);				
+		var data = (this.stereo) ? Wav16Tools.intsToStero16Bytes(this.ch1, this.ch2) : Wav16Tools.intsToMono16Bytes(this.ch1);				
 		new Writer(File.write(filename, true)).write({ header: header, data: data });		
 	}	
 	#end

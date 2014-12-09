@@ -38,14 +38,12 @@ Mp3DecodeWebAudio.main = function() {
 			var canvas = Mp3DecodeWebAudio.createElements(filename);
 			var wav16 = decodedFiles.get(filename);
 			audiotools.webaudio.utils.Wav16Canvas.drawWave(canvas,wav16,400,100);
-			console.log(wav16.ints.length);
+			console.log(wav16.ch1.length);
 		}
-		var w0;
-		w0 = js.Boot.__cast(decodedFiles.get("sample.mp3") , audiotools.Wav16Stereo);
-		var w1;
-		w1 = js.Boot.__cast(decodedFiles.get("leadvox.mp3") , audiotools.Wav16Mono);
-		audiotools.Wav16DSP.dspReverse(audiotools.Wav16DSP.dspMix(w0.get_leftInts(),w1.ints));
-		var w3 = new audiotools.Wav16Stereo(audiotools.Wav16DSP.dspReverse(audiotools.Wav16DSP.dspMix(w0.get_leftInts(),w1.ints)),audiotools.Wav16DSP.dspReverse(audiotools.Wav16DSP.dspMix(w0.get_rightInts(),w1.ints)));
+		var w0 = decodedFiles.get("sample.mp3");
+		var w1 = decodedFiles.get("leadvox.mp3");
+		audiotools.Wav16DSP.dspReverse(audiotools.Wav16DSP.dspMix(w0.ch1,w1.ch1));
+		var w3 = new audiotools.Wav16(audiotools.Wav16DSP.dspReverse(audiotools.Wav16DSP.dspMix(w0.ch1,w1.ch1)),audiotools.Wav16DSP.dspReverse(audiotools.Wav16DSP.dspMix(w0.ch2,w1.ch1)));
 		var canvas1 = Mp3DecodeWebAudio.createElements("decoded PCM data, mixed and reversed");
 		audiotools.webaudio.utils.Wav16Canvas.drawWave(canvas1,w3,400,100);
 		var source = context.createBufferSource();
@@ -88,32 +86,26 @@ StringTools.__name__ = true;
 StringTools.fastCodeAt = function(s,index) {
 	return s.charCodeAt(index);
 };
-var Type = function() { };
-Type.__name__ = true;
-Type.getClass = function(o) {
-	if(o == null) return null;
-	if((o instanceof Array) && o.__enum__ == null) return Array; else return o.__class__;
-};
 var audiotools = {};
 audiotools.Wav16 = function(channel1,channel2) {
 	this.stereo = false;
-	this.ints = channel1;
-	this.ints2 = channel2;
-	if(this.ints2 != null && this.ints2.length != this.ints.length) throw "Stereo file ints must have same length";
-	this.stereo = this.ints2 != null;
+	this.ch1 = channel1;
+	this.ch2 = channel2;
+	if(this.ch2 != null && this.ch2.length != this.ch1.length) throw "Stereo file ints must have same length";
+	this.stereo = this.ch2 != null;
 };
 audiotools.Wav16.__name__ = true;
-audiotools.Wav16.fromFileBytes = function(wavfileData) {
-	var wave = new format.wav.Reader(new haxe.io.BytesInput(wavfileData)).read();
+audiotools.Wav16.fromFileBytes = function(wavfileBytes) {
+	var wave = new format.wav.Reader(new haxe.io.BytesInput(wavfileBytes)).read();
 	var stereo = wave.header.channels == 2;
 	var data = wave.data;
 	var w16 = null;
 	if(stereo) {
 		var aInts = audiotools.Wav16Tools.stereoToInts(data,false);
-		w16 = new audiotools.Wav16Stereo(aInts[0],aInts[1]);
+		w16 = new audiotools.Wav16(aInts[0],aInts[1]);
 	} else {
 		var ints = audiotools.Wav16Tools.monoBytesToInts(data,false);
-		w16 = new audiotools.Wav16Mono(ints);
+		w16 = new audiotools.Wav16(ints);
 	}
 	return w16;
 };
@@ -210,32 +202,6 @@ audiotools.Wav16DSP.dspReverse = function(ints) {
 audiotools.Wav16DSP.interpolate = function(f,a,b) {
 	return (b - a) * f + a;
 };
-audiotools.Wav16Mono = function(channel1,channel2) {
-	audiotools.Wav16.call(this,channel1,channel2);
-};
-audiotools.Wav16Mono.__name__ = true;
-audiotools.Wav16Mono.fromBytes = function(wavData,stripHeader) {
-	if(stripHeader == null) stripHeader = true;
-	return new audiotools.Wav16Mono(audiotools.Wav16Tools.monoBytesToInts(wavData,stripHeader));
-};
-audiotools.Wav16Mono.__super__ = audiotools.Wav16;
-audiotools.Wav16Mono.prototype = $extend(audiotools.Wav16.prototype,{
-	__class__: audiotools.Wav16Mono
-});
-audiotools.Wav16Stereo = function(leftInts,rightInts) {
-	audiotools.Wav16.call(this,leftInts,rightInts);
-};
-audiotools.Wav16Stereo.__name__ = true;
-audiotools.Wav16Stereo.__super__ = audiotools.Wav16;
-audiotools.Wav16Stereo.prototype = $extend(audiotools.Wav16.prototype,{
-	get_leftInts: function() {
-		return this.ints;
-	}
-	,get_rightInts: function() {
-		return this.ints2;
-	}
-	,__class__: audiotools.Wav16Stereo
-});
 audiotools.Wav16Tools = function() { };
 audiotools.Wav16Tools.__name__ = true;
 audiotools.Wav16Tools.inRange = function(val,min,max) {
@@ -463,7 +429,6 @@ audiotools.utils.Mp3Wav16Decoder.prototype = {
 			_g.buffer = buffer;
 			var wavBytes = null;
 			var left = buffer.getChannelData(0);
-			console.log("ll " + left.length);
 			var leftInts;
 			var this1;
 			this1 = new Array(left.length);
@@ -491,17 +456,13 @@ audiotools.utils.Mp3Wav16Decoder.prototype = {
 					rightInts[pos1] = n1 * 32767 | 0;
 					pos1++;
 				}
-				wavBytes = audiotools.Wav16Tools.intsToStero16Bytes(leftInts,rightInts);
-				w16 = new audiotools.Wav16Stereo(leftInts,rightInts);
-			} else {
-				wavBytes = audiotools.Wav16Tools.intsToMono16Bytes(leftInts);
-				w16 = new audiotools.Wav16Mono(leftInts);
-			}
+				w16 = new audiotools.Wav16(leftInts,rightInts);
+			} else w16 = new audiotools.Wav16(leftInts);
 			_g.converted(w16,_g.mp3filename);
 		}).load();
 	}
 	,converted: function(wav16,mp3Filename) {
-		console.log(wav16.ints.length);
+		console.log(wav16.ch1.length);
 		console.log(this.mp3filename);
 	}
 	,setDecodedHandler: function(callbck) {
@@ -607,13 +568,12 @@ audiotools.webaudio.utils.Wav16Canvas.drawWave = function(canvas,wav16,width,hei
 	gr.lineWidth = 1;
 	gr.strokeStyle = "#000077";
 	gr.stroke();
-	var stereo = Type.getClass(wav16) == audiotools.Wav16Stereo;
-	var graphLeft = audiotools.Wav16Tools.getWaveformSamples(wav16.ints,width | 0);
+	var graphLeft = audiotools.Wav16Tools.getWaveformSamples(wav16.ch1,width | 0);
 	var graphRight = null;
-	if(stereo) graphRight = audiotools.Wav16Tools.getWaveformSamples((js.Boot.__cast(wav16 , audiotools.Wav16Stereo)).get_rightInts(),width | 0);
+	if(wav16.stereo) graphRight = audiotools.Wav16Tools.getWaveformSamples(wav16.ch2,width | 0);
 	var maxlevel = height / 2;
 	var incr = graphLeft.length / width;
-	if(stereo) {
+	if(wav16.stereo) {
 		var _y = height * .25;
 		var _x = 0;
 		gr.beginPath();
@@ -680,12 +640,12 @@ audiotools.webaudio.utils.Wav16Canvas.drawWave = function(canvas,wav16,width,hei
 audiotools.webaudio.utils.WebAudioTools = function() { };
 audiotools.webaudio.utils.WebAudioTools.__name__ = true;
 audiotools.webaudio.utils.WebAudioTools.createBufferFromWav16 = function(wav16,context) {
-	var stereo = Type.getClass(wav16) == audiotools.Wav16Stereo;
-	var length = wav16.ints.length;
+	var stereo = wav16.stereo;
+	var length = wav16.ch1.length;
 	var left = new Float32Array(length);
 	var pos = 0;
 	var _g = 0;
-	var _g1 = wav16.ints;
+	var _g1 = wav16.ch1;
 	while(_g < _g1.length) {
 		var $int = _g1[_g];
 		++_g;
@@ -697,7 +657,7 @@ audiotools.webaudio.utils.WebAudioTools.createBufferFromWav16 = function(wav16,c
 		right = new Float32Array(length);
 		var pos1 = 0;
 		var _g2 = 0;
-		var _g11 = (js.Boot.__cast(wav16 , audiotools.Wav16Stereo)).get_rightInts();
+		var _g11 = wav16.ch2;
 		while(_g2 < _g11.length) {
 			var int1 = _g11[_g2];
 			++_g2;
@@ -1239,9 +1199,6 @@ js.Boot.__instanceof = function(o,cl) {
 		if(cl == Enum && o.__ename__ != null) return true;
 		return o.__enum__ == cl;
 	}
-};
-js.Boot.__cast = function(o,t) {
-	if(js.Boot.__instanceof(o,t)) return o; else throw "Cannot cast " + Std.string(o) + " to " + Std.string(t);
 };
 js.Lib = function() { };
 js.Lib.__name__ = true;

@@ -5,18 +5,18 @@ import haxe.ds.Vector;
  * Wav16DSP
  * @author Jonas Nyström
  */
+
 class Wav16DSP 
 {
-
 	static public function dspMix(w1:Vector<Int>, w2:Vector<Int>, mixVol:Float=1.0, w1vol:Float=1.0, w2vol:Float=1.0): Vector<Int>
-	{
+	{		
 		var result:Vector<Int> = new Vector<Int>(w1.length);
 		for (pos in 0...w1.length)
-		{
+		{			
 			var v1 = w1.get(pos) * w1vol;
 			var v2 = w2.get(pos) * w2vol;
 			var v3 = Math.floor((v1 + v2) / mixVol);
-			result.set(pos, v3);
+			result.set(pos, v3);			
 		}
 		return result;
 	}	

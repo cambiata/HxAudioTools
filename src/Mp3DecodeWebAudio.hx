@@ -5,8 +5,6 @@ import audiotools.utils.Mp3Wav16Decoder;
 import audiotools.utils.Mp3Wav16Decoders;
 import audiotools.Wav16;
 import audiotools.Wav16DSP;
-import audiotools.Wav16Mono;
-import audiotools.Wav16Stereo;
 import audiotools.Wav16Tools;
 import audiotools.webaudio.Mp3ToBuffer;
 import audiotools.webaudio.utils.WebAudioTools;
@@ -43,12 +41,12 @@ class Mp3DecodeWebAudio
 				var canvas = createElements(filename);
 				var wav16 = decodedFiles.get(filename);
 				Wav16Canvas.drawWave(canvas, wav16, 400, 100);						
-				trace(wav16.ints.length);				
+				trace(wav16.ch1.length);				
 			}				
-			var w0 = cast(decodedFiles.get('sample.mp3'), Wav16Stereo);
-			var w1 = cast(decodedFiles.get('leadvox.mp3'), Wav16Mono);			
-			w0.leftInts.dspMix(w1.ints).dspReverse();			
-			var w3 = new Wav16Stereo(w0.leftInts.dspMix(w1.ints).dspReverse(),  w0.rightInts.dspMix(w1.ints).dspReverse());
+			var w0 = decodedFiles.get('sample.mp3'); // cast(decodedFiles.get('sample.mp3'), Wav16Stereo);
+			var w1 = decodedFiles.get('leadvox.mp3'); // cast(decodedFiles.get('leadvox.mp3'), Wav16Mono);			
+			w0.ch1.dspMix(w1.ch1).dspReverse();			
+			var w3 = new Wav16(w0.ch1.dspMix(w1.ch1).dspReverse(),  w0.ch2.dspMix(w1.ch1).dspReverse());
 			
 			var canvas = createElements('decoded PCM data, mixed and reversed');
 			Wav16Canvas.drawWave(canvas, w3, 400, 100);

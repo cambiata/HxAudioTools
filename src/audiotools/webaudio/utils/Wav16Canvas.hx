@@ -20,15 +20,16 @@ class Wav16Canvas
 		gr.strokeStyle = '#000077';
 		gr.stroke();				
 		
-		var stereo = Type.getClass(wav16) == Wav16Stereo;
 		
-		var graphLeft = Wav16Tools.getWaveformSamples(wav16.ints, Std.int(width));
+		
+		var graphLeft = Wav16Tools.getWaveformSamples(wav16.ch1, Std.int(width));
 		var graphRight:Array<Float> = null;		
-		if (stereo) graphRight = Wav16Tools.getWaveformSamples(cast(wav16, Wav16Stereo).rightInts, Std.int(width));
+		if (wav16.stereo) graphRight = Wav16Tools.getWaveformSamples(wav16.ch2, Std.int(width));
 		
 		var maxlevel = height / 2;				
-		var incr:Float =  graphLeft.length / width;		
-		if (stereo)
+		var incr:Float =  graphLeft.length / width;	
+		
+		if (wav16.stereo)
 		{			
 			var _y =  height * .25;
 			var _x = 0;
