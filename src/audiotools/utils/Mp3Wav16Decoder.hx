@@ -45,22 +45,19 @@ class Mp3Wav16Decoder
 		this.mp3filename = mp3Filename;
 	}
 	
-	public function execute() {
+	public function decode() {
 		this.getWavFile();
 		return this;
 	}	
 	
 	#if (sys)	
-	public function getWavFile(tempPath:String = '') {
-		var tempFilename = (tempPath != '') ? '$tempPath/temp.wav' : 'temp.wav';
-		var command = Sys.command('sox', [this.mp3filename, tempFilename]);
-		var wavBytes = File.getBytes(tempFilename);
-		
-		FileSystem.deleteFile(tempFilename);
-		var aInts = Wav16Tools.stereoToInts(wavBytes, true);
-		var w16 = new Wav16(aInts[0], aInts[1]);
-		this.converted(w16, this.mp3filename);
-	}
+		public function getWavFile(tempPath:String = '') {
+			var tempFilename = (tempPath != '') ? '$tempPath/temp.wav' : 'temp.wav';
+			var command = Sys.command('sox', [this.mp3filename, tempFilename]);
+			var w16 = Wav16.fromFile(tempFilename);
+			FileSystem.deleteFile(tempFilename);			
+			this.converted(w16, this.mp3filename);
+		}
 	#end
 
 	#if (flash) 

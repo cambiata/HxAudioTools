@@ -1,5 +1,6 @@
 package audiotools.webaudio.utils;
 import audiotools.Wav16;
+
 import js.html.audio.AudioBuffer;
 import js.html.audio.AudioContext;
 import js.html.Float32Array;
@@ -10,7 +11,7 @@ import js.html.Float32Array;
  */
 class WebAudioTools 
 {
-	static public function createBufferFromWav16(wav16:Wav16, context:AudioContext):AudioBuffer {
+	static public function createBufferFromWav16(wav16:Wav16, context:AudioContext, samplerate:Int=44100):AudioBuffer {
 		
 		var stereo = wav16.stereo;		
 		var length = wav16.ch1.length;
@@ -35,11 +36,11 @@ class WebAudioTools
 		var newbuffer:AudioBuffer = null;
 		
 		if (stereo) {
-			newbuffer = context.createBuffer(2, left.length, 44100);
+			newbuffer = context.createBuffer(2, left.length, samplerate);
 			newbuffer.getChannelData(0).set(left);
 			newbuffer.getChannelData(1).set(right);			
 		} else {
-			newbuffer = context.createBuffer(1, left.length, 44100);
+			newbuffer = context.createBuffer(1, left.length, samplerate);
 			newbuffer.getChannelData(0).set(left);			
 		}
 		
@@ -47,7 +48,22 @@ class WebAudioTools
 		
 	}
 	
-	static public function getAudioContext():AudioContext
+	static public function testplay(w:Wav16, context:AudioContext = null) {
+		if (context == null) context = WebAudioTools.getAudioContext();
+		var source = context.createBufferSource();		
+		source.buffer = WebAudioTools.createBufferFromWav16(w, context, 48000); // STRANGE! 48000???
+		source.connect(context.destination, 0, 0);				
+		source.start(0);			
+	}
+	
+	static var _context:AudioContext;
+	
+	static public function getAudioContext():AudioContext {
+		if (_context == null) _context = createAudioContext();
+		return _context;		
+	}	
+	
+	static public function createAudioContext():AudioContext
 	{
 		var context:AudioContext = null;
 		untyped __js__ ('

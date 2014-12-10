@@ -1,5 +1,6 @@
 package audiotools.utils;
 #if (js)
+import audiotools.webaudio.utils.WebAudioTools;
 import js.html.audio.AudioContext;
 #end
 using Lambda;
@@ -12,10 +13,16 @@ class Mp3Wav16Decoders
 	var decodedFiles:Map<String, Wav16>;
 	var decoders:Array<Mp3Wav16Decoder>;
 	var decodedCount:Int;
-	public function new(mp3files:Array<String> #if(js) , context:AudioContext #end) 
+	
+	#if js
+	static public var context:AudioContext;
+	#end
+	
+	public function new(mp3files:Array<String>) 
 	{
 		this.decoders = mp3files.map(function(file:String) return new Mp3Wav16Decoder(file));	
-		#if (js) 
+		#if (js) 		
+		if (Mp3Wav16Decoders.context == null) Mp3Wav16Decoders.context = WebAudioTools.getAudioContext();
 		this.decoders.iter(function(decoder) decoder.setContext(context));
 		#end
 		for (loader in this.decoders) loader.converted = this.onDecoded;		
@@ -23,6 +30,7 @@ class Mp3Wav16Decoders
 	
 	dynamic public function onDecoded(wav16:Wav16, mp3Filename:String) {
 		this.decodedFiles.set(mp3Filename, wav16);
+		trace('decoded $mp3Filename');
 		decodedCount++;
 		if (decodedCount >= this.decoders.length) this.allDecoded(this.decodedFiles);		
 	}	
@@ -31,10 +39,10 @@ class Mp3Wav16Decoders
 		trace('ALL DECODED');		
 	}
 	
-	public function startDecoding() {		
+	public function decodeAll() {		
 		this.decodedCount = 0;
 		this.decodedFiles = new Map<String,Wav16>();
-		for (decoder in this.decoders) decoder.execute();
+		for (decoder in this.decoders) decoder.decode();
 		return this;
 	}		
 	

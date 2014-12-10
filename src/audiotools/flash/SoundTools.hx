@@ -56,6 +56,9 @@ class SoundTools
 		format._waveDataLength = fullDataLength - 84;
 		return format;
 	}    	
+	
+	
+	
 }
 
 class PCMFormat

@@ -19,7 +19,7 @@ class BytesLoaders
 		
 	}
 	
-	public function loadBytes() {		
+	public function loadAll() {		
 		this.loadedCount = 0;
 		this.loadedBytes = new Map<String,Bytes>();
 		for (loader in this.loaders) loader.loadBytes();

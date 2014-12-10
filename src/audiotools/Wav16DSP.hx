@@ -8,8 +8,32 @@ import haxe.ds.Vector;
 
 class Wav16DSP 
 {
+	static public function wspMix(w1:Wav16, w2:Wav16, mixVol:Float = 1.0, w1vol:Float = 1.0, w2vol:Float = 1.0) {				
+		var stereo = (w1.stereo || w2.stereo);
+		if (stereo && !w1.stereo) w1 = Wav16Tools.toStereo(w1);
+		if (stereo && !w2.stereo) w2= Wav16Tools.toStereo(w2);
+		
+		var resultCh1 = dspMix(w1.ch1, w2.ch1, mixVol, w1vol, w2vol);
+		var resultCh2:Vector<Int> = null;
+		if (stereo) resultCh2 = dspMix(w1.ch2, w2.ch2, mixVol, w1vol, w2vol);		
+		return new Wav16(resultCh1, resultCh2);
+	}
+	
+	static public function wspMixInto(w1:Wav16, w2:Wav16, offset:Int = 0, w2Vol:Float=1.0):Wav16 {		
+		if (w1.stereo != w2.stereo) {
+			w1 = Wav16Tools.toStereo(w1);
+			w2 = Wav16Tools.toStereo(w2);
+		}
+		dspMixInto(w1.ch1, w2.ch1, offset, w2Vol);
+		if (w1.stereo) dspMixInto(w1.ch2, w2.ch2);		
+		return w1;
+	}
+
+	//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	
 	static public function dspMix(w1:Vector<Int>, w2:Vector<Int>, mixVol:Float=1.0, w1vol:Float=1.0, w2vol:Float=1.0): Vector<Int>
-	{		
+	{	
+		
 		var result:Vector<Int> = new Vector<Int>(w1.length);
 		for (pos in 0...w1.length)
 		{			
@@ -20,6 +44,16 @@ class Wav16DSP
 		}
 		return result;
 	}	
+	
+	static public function dspMixInto(w1:Vector<Int>, w2:Vector<Int>, offset:Int = 0, w2vol:Float=1.0) {		
+		if (offset + w2.length > w1.length) throw "mixinto error";		
+		for (i in 0...w2.length) {
+			var val1 = w1.get(offset + i);
+			var val2 =  Std.int(w2.get(i) * w2vol);
+			var val3 = val1 + val2;
+			w1.set(offset + i, val3);	
+		}
+	}
 	
 	static public function dspFadeIn(ints:Vector<Int>, length:Int, startLevel:Float=0.0):Vector<Int>
 	{		

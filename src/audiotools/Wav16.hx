@@ -29,6 +29,9 @@ class Wav16
 		this.stereo = (this.ch2 != null);
 	}
 	
+	public var length(get, null):Int;
+	function get_length() return this.ch1.length;
+	
 	static public function fromFileBytes(wavfileBytes:Bytes):Wav16  {
 		
 		var wave:WAVE = new Reader(new BytesInput(wavfileBytes)).read();
@@ -46,6 +49,16 @@ class Wav16
 		}
 			
 		return w16;
+	}
+	
+	static public function create(lengthSamples:Int, stereo = false, prefill = true) {
+		function getChannel() {
+			var ch = new Vector<Int>(lengthSamples);
+			if (prefill) for (i in 0...lengthSamples) ch.set(i, 0);
+			return ch;
+		}
+		
+		return new  Wav16(getChannel(), (stereo) ? getChannel() : null);
 	}
 	
 	#if (sys)	

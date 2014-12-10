@@ -1,4 +1,4 @@
 @echo off
-cd bin
+cd bin/decode
 neko Mp3DecodeNeko.n
 pause

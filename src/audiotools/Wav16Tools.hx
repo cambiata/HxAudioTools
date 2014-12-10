@@ -1,4 +1,5 @@
 package audiotools;
+
 import format.wav.Data.WAVEHeader;
 import haxe.ds.Vector;
 import haxe.io.Bytes;
@@ -145,4 +146,33 @@ class Wav16Tools
 		}
 		return result;
 	}
+	
+	static public function toStereo(w:Wav16) {
+		if (w.stereo) return w;
+		return new Wav16(copyChannel(w.ch1), copyChannel(w.ch1));
+	}	
+	
+	static public inline function copyChannel(ints:Vector<Int>): Vector<Int> {
+		var result = new Vector<Int>(ints.length);
+		for (i in 0...ints.length) result.set(i, ints.get(i));
+		return result;
+	}	
+	
+	
+	static public function testplay(wav16:Wav16) {
+		#if flash
+			audiotools.flash.FlashAudioTools.testplay(wav16);
+			return;
+		#end
+		#if js
+			audiotools.webaudio.utils.WebAudioTools.testplay(wav16);
+			return;
+		#end
+		#if sys
+			trace('Wav16Tools.testplay() not implemented - saves file to disk as "testfile.wav" instead');
+			wav16.saveFile('testfile.wav');
+			return;
+		#end
+	}
+	
 }

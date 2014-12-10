@@ -6,7 +6,7 @@
 	<meta title="OpenFLMixWav" package="OpenFLMixWav" version="1.0.0" company="Jonas Nyström" />
 	
 	<!-- output -->
-	<app main="OpenFLMixWav" file="OpenFLMixWav" path="bin" />
+	<app main="examples.mix.OpenFLMixWav" file="OpenFLMixWav" path="bin" />
 	
 	<window background="#ffffff" fps="60" />
 	<window width="1000" height="600" unless="mobile" />

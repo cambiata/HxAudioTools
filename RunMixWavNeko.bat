@@ -1,4 +1,4 @@
 @echo off
-cd bin
+cd bin/mix
 neko MixWavNeko.n
 pause
