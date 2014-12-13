@@ -16,11 +16,9 @@ class FlashAudioTools
 		var ch2 = (wav16.stereo) ? wav16.ch2 : wav16.ch1;
 		var byteArray = OpenflWav16Tools.intsToStereo16ByteArray(wav16.ch1, ch2);
 		
-		
 		SoundTools.buildSound(OpenflWav16Tools.intsToStereo16ByteArray(wav16.ch1, ch2), SoundTools.stereo16format(wav16.ch1.length), function(sound) {
 			sound.play(0);
 		});	
-		
 		
 		//OpenflWav16Tools.intsToStereo16ByteArray
 		/*

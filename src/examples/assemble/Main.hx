@@ -37,8 +37,8 @@ class Main
 			var w50:Wav16  = data.get('piano/50.mp3');						
 			var w56:Wav16  = data.get('piano/56.mp3');						
 			var w = Wav16.create(w49.length * 3, false);
-			w = Wav16DSP.wspMixInto(w, w49, 0);
-			w = Wav16DSP.wspMixInto(w, w56, 0);			
+			Wav16DSP.wspMixInto(w, w49, 0);
+			Wav16DSP.wspMixInto(w, w56, 0);			
 			displayWave(w, 0);
 			Wav16Tools.testplay(w);						
 		};

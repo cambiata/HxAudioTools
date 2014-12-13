@@ -10,8 +10,8 @@ class Wav16DSP
 {
 	static public function wspMix(w1:Wav16, w2:Wav16, mixVol:Float = 1.0, w1vol:Float = 1.0, w2vol:Float = 1.0) {				
 		var stereo = (w1.stereo || w2.stereo);
-		if (stereo && !w1.stereo) w1 = Wav16Tools.toStereo(w1);
-		if (stereo && !w2.stereo) w2= Wav16Tools.toStereo(w2);
+		if (stereo && !w1.stereo) w1.toStereo(); // = Wav16Tools.toStereo(w1);
+		if (stereo && !w2.stereo) w2.toStereo(); //= Wav16Tools.toStereo(w2);
 		
 		var resultCh1 = dspMix(w1.ch1, w2.ch1, mixVol, w1vol, w2vol);
 		var resultCh2:Vector<Int> = null;
@@ -19,14 +19,14 @@ class Wav16DSP
 		return new Wav16(resultCh1, resultCh2);
 	}
 	
-	static public function wspMixInto(w1:Wav16, w2:Wav16, offset:Int = 0, w2Vol:Float=1.0):Wav16 {		
+	static public function wspMixInto(w1:Wav16, w2:Wav16, offset:Int = 0, w2Vol:Float=1.0) {		
 		if (w1.stereo != w2.stereo) {
-			w1 = Wav16Tools.toStereo(w1);
-			w2 = Wav16Tools.toStereo(w2);
+			w1.toStereo();// = Wav16Tools.toStereo(w1);
+			w2.toStereo(); // = Wav16Tools.toStereo(w2);
 		}
 		dspMixInto(w1.ch1, w2.ch1, offset, w2Vol);
 		if (w1.stereo) dspMixInto(w1.ch2, w2.ch2);		
-		return w1;
+		//return w1;
 	}
 
 	//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

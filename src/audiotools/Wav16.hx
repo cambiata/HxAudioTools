@@ -73,7 +73,11 @@ class Wav16
 	}	
 	#end
 	
-	
+	public function toStereo() {
+		if (this.stereo) return;
+		this.ch2 = new Vector<Int>(this.ch1.length);
+		for (i in 0...this.ch1.length) this.ch2.set(i, this.ch1.get(i));
+	}		
 	
 	
 	

@@ -147,10 +147,7 @@ class Wav16Tools
 		return result;
 	}
 	
-	static public function toStereo(w:Wav16) {
-		if (w.stereo) return w;
-		return new Wav16(copyChannel(w.ch1), copyChannel(w.ch1));
-	}	
+
 	
 	static public inline function copyChannel(ints:Vector<Int>): Vector<Int> {
 		var result = new Vector<Int>(ints.length);
