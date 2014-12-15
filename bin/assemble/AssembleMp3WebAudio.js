@@ -81,9 +81,26 @@ audiotools.Wav16.create = function(lengthSamples,stereo,prefill) {
 	};
 	return new audiotools.Wav16(getChannel(),stereo?getChannel():null);
 };
+audiotools.Wav16.createSecs = function(lengthSecs,stereo,prefill) {
+	if(prefill == null) prefill = true;
+	if(stereo == null) stereo = false;
+	return audiotools.Wav16.create(audiotools.Wav16Tools.toSamples(lengthSecs),stereo,prefill);
+};
 audiotools.Wav16.prototype = {
 	get_length: function() {
 		return this.ch1.length;
+	}
+	,toStereo: function() {
+		if(this.stereo) return;
+		var this1;
+		this1 = new Array(this.ch1.length);
+		this.ch2 = this1;
+		var _g1 = 0;
+		var _g = this.ch1.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			this.ch2[i] = this.ch1[i];
+		}
 	}
 	,__class__: audiotools.Wav16
 };
@@ -94,23 +111,23 @@ audiotools.Wav16DSP.wspMix = function(w1,w2,mixVol,w1vol,w2vol) {
 	if(w1vol == null) w1vol = 1.0;
 	if(mixVol == null) mixVol = 1.0;
 	var stereo = w1.stereo || w2.stereo;
-	if(stereo && !w1.stereo) w1 = audiotools.Wav16Tools.toStereo(w1);
-	if(stereo && !w2.stereo) w2 = audiotools.Wav16Tools.toStereo(w2);
+	if(stereo && !w1.stereo) w1.toStereo();
+	if(stereo && !w2.stereo) w2.toStereo();
 	var resultCh1 = audiotools.Wav16DSP.dspMix(w1.ch1,w2.ch1,mixVol,w1vol,w2vol);
 	var resultCh2 = null;
 	if(stereo) resultCh2 = audiotools.Wav16DSP.dspMix(w1.ch2,w2.ch2,mixVol,w1vol,w2vol);
 	return new audiotools.Wav16(resultCh1,resultCh2);
 };
-audiotools.Wav16DSP.wspMixInto = function(w1,w2,offset,w2Vol) {
+audiotools.Wav16DSP.wspMixInto = function(w1,w2,offset,w2length,w2Vol) {
 	if(w2Vol == null) w2Vol = 1.0;
+	if(w2length == null) w2length = -1;
 	if(offset == null) offset = 0;
-	console.log("wsp-mixinto");
 	if(w1.stereo != w2.stereo) {
-		w1 = audiotools.Wav16Tools.toStereo(w1);
-		w2 = audiotools.Wav16Tools.toStereo(w2);
+		w1.toStereo();
+		w2.toStereo();
 	}
-	audiotools.Wav16DSP.dspMixInto(w1.ch1,w2.ch1,offset,w2Vol);
-	if(w1.stereo) audiotools.Wav16DSP.dspMixInto(w1.ch2,w2.ch2);
+	audiotools.Wav16DSP.dspMixInto(w1.ch1,w2.ch1,offset,w2length,w2Vol);
+	if(w1.stereo) audiotools.Wav16DSP.dspMixInto(w1.ch2,w2.ch2,offset,w2length,w2Vol);
 };
 audiotools.Wav16DSP.dspMix = function(w1,w2,mixVol,w1vol,w2vol) {
 	if(w2vol == null) w2vol = 1.0;
@@ -131,19 +148,25 @@ audiotools.Wav16DSP.dspMix = function(w1,w2,mixVol,w1vol,w2vol) {
 	}
 	return result;
 };
-audiotools.Wav16DSP.dspMixInto = function(w1,w2,offset,w2vol) {
+audiotools.Wav16DSP.dspMixInto = function(w1,w2,offset,w2length,w2vol,soften) {
+	if(soften == null) soften = 500;
 	if(w2vol == null) w2vol = 1.0;
+	if(w2length == null) w2length = -1;
 	if(offset == null) offset = 0;
-	console.log("mixinto");
-	if(offset + w2.length > w1.length) throw "mixinto error";
-	var _g1 = 0;
-	var _g = w2.length;
-	while(_g1 < _g) {
-		var i = _g1++;
+	var length;
+	if(w2length > 0) length = Std["int"](Math.min(w2.length,w2length)); else length = w2.length;
+	if(offset + length > w1.length) throw "mixinto error";
+	var softenstart = length - soften;
+	var _g = 0;
+	while(_g < length) {
+		var i = _g++;
 		var val1 = w1[offset + i];
 		var val2 = w2[i] * w2vol | 0;
+		if(i > softenstart) {
+			var delta = (length - i) / soften;
+			val2 = val2 * delta | 0;
+		}
 		var val3 = val1 + val2;
-		if(i % 1000 == 0) console.log([i,val1,val2,val3]);
 		w1[offset + i] = val3;
 	}
 };
@@ -356,9 +379,11 @@ audiotools.Wav16Tools.getWaveformSamples = function(ints,nrOfSamples,sampleAcc) 
 	}
 	return result;
 };
-audiotools.Wav16Tools.toStereo = function(w) {
-	if(w.stereo) return w;
-	return new audiotools.Wav16(audiotools.Wav16Tools.copyChannel(w.ch1),audiotools.Wav16Tools.copyChannel(w.ch1));
+audiotools.Wav16Tools.toSecs = function(samples) {
+	return samples / audiotools.Wav16Tools.SAMPLERATE;
+};
+audiotools.Wav16Tools.toSamples = function(secs) {
+	return secs * audiotools.Wav16Tools.SAMPLERATE | 0;
 };
 audiotools.Wav16Tools.copyChannel = function(ints) {
 	var result;
@@ -762,7 +787,6 @@ examples.assemble = {};
 examples.assemble.Main = function() { };
 examples.assemble.Main.__name__ = true;
 examples.assemble.Main.main = function() {
-	var silent = audiotools.Wav16.create(1000,true);
 	var mp3start = 49;
 	var mp3end = 60;
 	var files = ((function($this) {
@@ -789,6 +813,7 @@ examples.assemble.Main.main = function() {
 		var w = audiotools.Wav16.create(w49.get_length() * 3,false);
 		audiotools.Wav16DSP.wspMixInto(w,w49,0);
 		audiotools.Wav16DSP.wspMixInto(w,w56,0);
+		audiotools.Wav16DSP.wspMixInto(w,w50,audiotools.Wav16Tools.toSamples(2));
 		examples.assemble.Main.displayWave(w,0);
 		audiotools.Wav16Tools.testplay(w);
 	};
@@ -1355,5 +1380,6 @@ if(Array.prototype.map == null) Array.prototype.map = function(f) {
 	}
 	return a;
 };
+audiotools.Wav16Tools.SAMPLERATE = 44100;
 examples.assemble.Main.main();
 })();

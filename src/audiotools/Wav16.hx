@@ -61,6 +61,11 @@ class Wav16
 		return new  Wav16(getChannel(), (stereo) ? getChannel() : null);
 	}
 	
+	static public function createSecs(lengthSecs:Float, stereo = false, prefill = true) {
+		return create(Wav16Tools.toSamples(lengthSecs), stereo, prefill);
+	}
+	
+	
 	#if (sys)	
 	static public function fromFile(wavFilename:String): Wav16 {
 		return fromFileBytes(File.getBytes(wavFilename));

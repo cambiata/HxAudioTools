@@ -19,13 +19,13 @@ class Wav16DSP
 		return new Wav16(resultCh1, resultCh2);
 	}
 	
-	static public function wspMixInto(w1:Wav16, w2:Wav16, offset:Int = 0, w2Vol:Float=1.0) {		
+	static public function wspMixInto(w1:Wav16, w2:Wav16, offset:Int = 0, w2length:Int=-1, w2Vol:Float=1.0) {		
 		if (w1.stereo != w2.stereo) {
 			w1.toStereo();// = Wav16Tools.toStereo(w1);
 			w2.toStereo(); // = Wav16Tools.toStereo(w2);
 		}
-		dspMixInto(w1.ch1, w2.ch1, offset, w2Vol);
-		if (w1.stereo) dspMixInto(w1.ch2, w2.ch2);		
+		dspMixInto(w1.ch1, w2.ch1, offset, w2length, w2Vol);
+		if (w1.stereo) dspMixInto(w1.ch2, w2.ch2, offset, w2length, w2Vol);		
 		//return w1;
 	}
 
@@ -45,11 +45,22 @@ class Wav16DSP
 		return result;
 	}	
 	
-	static public function dspMixInto(w1:Vector<Int>, w2:Vector<Int>, offset:Int = 0, w2vol:Float=1.0) {		
-		if (offset + w2.length > w1.length) throw "mixinto error";		
-		for (i in 0...w2.length) {
+	static public function dspMixInto(w1:Vector<Int>, w2:Vector<Int>, offset:Int = 0, w2length:Int=-1, w2vol:Float=1.0, soften:Int=500 ) {		
+		
+		var length = (w2length > 0) ? Std.int(Math.min(w2.length, w2length)) : w2.length;
+		
+		if (offset + length > w1.length) throw "mixinto error";		
+		
+		var softenstart = length - soften;
+		
+		for (i in 0...length) {
 			var val1 = w1.get(offset + i);
-			var val2 =  Std.int(w2.get(i) * w2vol);
+			
+			var val2 = Std.int(w2.get(i) * w2vol);
+			if (i > softenstart) {
+				var delta = (length-i) / soften;
+				val2 = Std.int(val2 * delta);
+			} 
 			var val3 = val1 + val2;
 			w1.set(offset + i, val3);	
 		}

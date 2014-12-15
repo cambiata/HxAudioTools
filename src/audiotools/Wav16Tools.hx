@@ -147,7 +147,9 @@ class Wav16Tools
 		return result;
 	}
 	
-
+	static var SAMPLERATE:Int = 44100;	
+	static public function toSecs(samples:Int) return samples / SAMPLERATE;
+	static public function toSamples(secs:Float) return Std.int(secs * SAMPLERATE);
 	
 	static public inline function copyChannel(ints:Vector<Int>): Vector<Int> {
 		var result = new Vector<Int>(ints.length);
