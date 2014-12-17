@@ -10,6 +10,7 @@ Note! Early development - a lot of experimenting and fiddling going on. Don't ex
 
 ### Implemented: 
 - 16 bit 44.1kHz wav files, mono and stereo
+- uses haxe.ds.Vector<Int> for internal PCM reperesentation (might be changed!)
 - mp3 decoding per platform (flash relies on Sound.extract(), webAudio relies on AudioBuffer data, **neko/cpp relies on SOX utility installed!**)
 - basic signal processing (DSP): mixing, fading, reversing - should work on all platforms
 - waveform display using OpenFL or html5/canvas
