@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+	<title>Haxe Web Audio Mixer</title>
+	
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+	<link href="css/style.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+	<div id="app">
+		<div id="top">
+			
+		</div>		
+		<div id="masterTools" >
+			<table border=0 >
+				<tr>
+					<td><h1>Haxe Web Audio Spectrum</h1><p>Haxe reinterpreatation of http://djazz.se/apps/analyzer/</p></td>
+					<td id="sampleSong"><progress id="downloadMeter" style="width: 300px;"></progress></td>
+				</tr>
+				<tr>
+					<td>
+						<input type=file id="customAudio" accept="audio/*"><br />
+						Status: <span id="status"></span><br>							
+					</td>
+					<td>
+						Time: <span id="time">00:00:00.0 | 00:00:00.0</span><br />
+						<button class="control" id="rewind" disabled>rewind</button>
+						<button class="control" id="toggleplay" disabled>play</button>
+					</td>					
+				</tr>				
+			</table>
+		</div>
+		<div id="container" style="position: relative; overflow: auto; max-width: 1200px;">
+			<canvas id="audiodatacanvas" width=1200 height=160 style="background-color: #EEE; display: block;"></canvas>
+			<canvas id="spectrogramcanvas" width=1200 height=256 style="background-color: #000; display: block;"></canvas>
+			<div id="cursor" style="position: absolute; top: 0px; left: -1px; background-color: black; width: 1px; height: 100%; border: 1px solid white; border-top: none; border-bottom: none;"></div>
+		</div>
+
+		<div style="overflow: auto;">
+			<canvas id="spectrum" width="1200" height="280" style="background-color: #303030; display: block;"></canvas>
+		</div>
+	</div>
+	
+	<script src="wa-spectrum.js"></script>
+</body>
+</html>

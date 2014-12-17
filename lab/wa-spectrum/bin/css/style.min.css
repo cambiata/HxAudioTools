@@ -1,0 +1,21 @@
+html{}
+body{background-color:#bbbbbb;height:100%;}
+#app{margin-left:auto;margin-right:auto;width:902px;background-color:#ffffff;padding:12px;}
+#waveCanvas{float:right;width:600px;height:120px;background-color:black;}
+#masterTools{height:160px;}
+#controls{width:300px;border:0px solid red;float:left;}
+button{width:96px;height:40px;}
+#masterVolume{width:160px;}
+#volume{height:42px;}
+#songs{text-align:center;}
+tr{padding:0;margin:0;}
+td{padding:0;margin:0;}
+#trackControl{float:left;width:300px;overflow:hidden;}
+#tracks{width:100%;margin-top:-10px;height:50px;}
+.trackBox{vertical-align:middle;border:1px solid grey;}
+#canvass{margin-left:300px;}
+#myCanvas{background-color:black;}
+#scroll{min-height:400px;max-height:800px;overflow:auto;overflow-x:hidden;}
+.pisteProgress{-webkit-transform:rotate(-90deg);-moz-transform:rotate(-90deg);-o-transform:rotate(-90deg);-ms-transform:rotate(-90deg);transform:rotate(-90deg);filter:progid:DXImageTransform.Microsoft.BasicImage(rotation=-1);margin-left:-30px;height:20px;margin-top:0px;}
+.volumeSlider{margin-left:20px;margin-right:20px;width:100px;float:right;}
+	

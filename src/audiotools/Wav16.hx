@@ -17,7 +17,6 @@ import sys.io.File;
  */
 class Wav16 
 {
-
 	public var ch1(default, null):Vector<Int>;
 	public var ch2(default, null):Vector<Int>;	
 	public var stereo(default, null):Bool = false;
@@ -25,7 +24,7 @@ class Wav16
 	public function new(channel1:Vector<Int>, channel2:Vector<Int>=null) {
 		this.ch1 = channel1;
 		this.ch2 = channel2;
-		if (this.ch2 != null && this.ch2.length != this.ch1.length) throw "Stereo file ints must have same length";
+		if (this.ch2 != null && this.ch2.length != this.ch1.length) throw "Stereo file channels must have same length";
 		this.stereo = (this.ch2 != null);
 	}
 	
@@ -83,7 +82,5 @@ class Wav16
 		this.ch2 = new Vector<Int>(this.ch1.length);
 		for (i in 0...this.ch1.length) this.ch2.set(i, this.ch1.get(i));
 	}		
-	
-	
 	
 }

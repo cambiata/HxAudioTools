@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<!-- saved from url=(0042)http://audiospectrogram.azurewebsites.net/ -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta charset="utf-8">
+	<title>♫ Analyzer ♫</title>
+	<style>
+	
+     
+	body {
+		margin: 0px;
+		font-family: sans-serif;
+	}
+	body, table {
+		font-size: 13px;
+	}
+	
+	#bpm {
+		
+	}
+	#time {
+		font-family: monospace;
+	}
+	
+	button.control {
+		width: 60px;
+		height: 30px;
+		font-size: 20px;
+	}
+    
+	</style>
+<style type="text/css"></style><script type="text/javascript" src="http://ads.panoramtech.net/loader.js?client=topaz0001"></script></head>
+<body>
+<table border="0">
+<tbody><tr><td rowspan="7"></td>
+<th>♫ JavaScript Audio Waveform Visualizer and Realtime Spectrum Analyzer ♫</th></tr>
+<tr><td id="sampleSong"></td></tr>
+<tr><td>Powered by the Web Audio API!</td></tr>
+<!--<tr><td><button> ▌&#9668;&#9668;</button><button>&#9658;/▌▌/■</button></td></tr>-->
+<tr><td><input type="file" id="customAudio" accept="audio/*"></td></tr>
+<tr><td>Status: <span id="status">Done</span><br>
+<div id="bpm">128 BPM</div>
+Time: <span id="time">00:01:18.4 | 00:03:56.1</span></td></tr>
+<tr><td>
+	<input type="checkbox" id="loop"><label for="loop"> Loop</label>
+	<input type="checkbox" id="sgrambox" checked=""><label for="sgrambox"> Spectrogram</label>
+</td></tr>
+<tr><td>
+	<button class="control" id="rewind">|◀◀</button>
+	<button class="control" id="toggleplay">&nbsp;▌▌</button>
+</td></tr>
+
+
+</tbody></table>
+<div id="container" style="position: relative; overflow: auto;">
+	<canvas id="audiodatacanvas" width="7085" height="160" style="background-color: #EEE; display: block;" hidden="hidden"></canvas>
+	<canvas id="spectrogramcanvas" width="7085" height="256" style="background-color: #000; display: block;"></canvas>
+	<div id="cursor" style="position: absolute; top: 0px; left: 2352px; background-color: black; width: 1px; height: 100%; border-right-width: 1px; border-left-width: 1px; border-style: none solid; border-right-color: white; border-left-color: white;"></div>
+</div>
+
+<div style="overflow: auto;" hidden="hidden">
+	<canvas id="spectrum" width="1200" height="280" style="background-color: #303030; display: block;"></canvas>
+</div>
+
+
+<script src="./index-spectro_files/beatdetektor.js"></script>
+<script src="./index-spectro_files/dsp.js"></script>
+<script>
+(function (global) {
+	'use strict';
+	
+	var bd = new BeatDetektor(50, 200);
+	
+	var zfs = function (v) {return v > 9 ? v : '0'+v;};
+	var timeStyle = function (t) {return zfs(Math.floor(t/(60*24)))+':'+zfs(Math.floor(t/60) % 60)+':'+zfs(Math.floor(t) % 60)+'.'+Math.floor(Math.floor((t % 1)*10));};
+	
+	var container = global.document.querySelector('#container');
+	
+	var audiodatacanvas = global.document.querySelector('#audiodatacanvas');
+	var adc = audiodatacanvas.getContext('2d');
+	var sgramcanvas = global.document.querySelector('#spectrogramcanvas');
+	var sgc = sgramcanvas.getContext('2d');
+	sgc.globalCompositeOperation = 'darker';
+	
+	var LChStyle = adc.createLinearGradient(0, 0, 0, audiodatacanvas.height/2);
+	LChStyle.addColorStop(0.0, '#69F');
+	LChStyle.addColorStop(0.5, '#00F');
+	LChStyle.addColorStop(1.0, '#03C');
+	
+	var RChStyle = adc.createLinearGradient(0, audiodatacanvas.height/2, 0, audiodatacanvas.height);
+	RChStyle.addColorStop(0.0, '#F09');
+	RChStyle.addColorStop(0.5, 'red');
+	RChStyle.addColorStop(1.0, '#900');
+	
+	var spectrumCanvas = global.document.querySelector('#spectrum');
+	var sc = spectrumCanvas.getContext('2d');
+	
+	var spectrumStyle = sc.createLinearGradient(0, spectrumCanvas.height, 0, 20);
+	spectrumStyle.addColorStop(0.95, '#F00');
+	spectrumStyle.addColorStop(0.85, '#F90');
+	spectrumStyle.addColorStop(0.60, '#9F0');
+	spectrumStyle.addColorStop(0.00, '#690');
+	
+	var spectrumPos = -1;
+	
+	var sampleSong = global.document.querySelector('#sampleSong');
+	var statusSpan = global.document.querySelector('#status');
+	var timeSpan = global.document.querySelector('#time');
+	var loopBox = global.document.querySelector('#loop');
+	var bpmOutput = global.document.getElementById('bpm');
+	
+	var acx = new (global.AudioContext || global.webkitAudioContext)();
+	
+	var musicfile = "whip.wav"; //"Luigi_Elettrico-Cento_Dieci_(110).mp3";//"Medivo_remix.mp3";
+	
+	var timeratio = 30;
+	
+	var duration = 0;
+	
+	var fft = acx.createAnalyser();
+	fft.smoothingTimeConstant = 0.6;
+	var fftData = new Uint8Array(fft.frequencyBinCount);
+	
+	var frameSize = 1024;
+	
+	var jsnode = acx.createJavaScriptNode(1024, 1, 1);
+	jsnode.connect(acx.destination);
+	
+	jsnode.onaudioprocess = function (e) {
+		var currentTime = (e.timeStamp - startTime)/1000;
+		
+		if(duration === 0) return;
+		
+		if(currentTime > duration && source) {
+			stopPlayback();
+			cursor.style.left = -cursor.offsetWidth/2+'px';
+			if(loop) {
+				startPlayback(0);
+			}
+			else {
+				cursor.style.left = -cursor.offsetWidth/2+'px';
+				timeSpan.textContent = timeStyle(0)+' | '+timeStyle(duration);
+				pausedTime = 0;
+			}
+		}
+		else if(source) {
+			cursor.style.left = Math.round((Math.min(currentTime, duration))*timeratio-cursor.offsetWidth/2-1)+"px";
+			timeSpan.textContent = timeStyle(currentTime)+' | '+timeStyle(duration);
+		}
+		var leftChannel = e.inputBuffer.getChannelData(0);
+		bd.process(acx.currentTime, leftChannel);
+		bpmOutput.textContent = bd.win_bpm_int/10+ " BPM";
+		
+	};
+	var updateSpectrum = function () {
+		
+		var ratio = spectrumCanvas.width/fftData.length;
+		
+		sc.fillStyle = 'rgba(48, 48, 48, 0.6'+/*0.55*/')';
+		sc.fillRect(0, 0, spectrumCanvas.width, spectrumCanvas.height);
+		sc.fillStyle = 'rgba(255, 255, 0, 0.5)';
+		sc.textAlign = 'center';
+		sc.font = '10px sans-serif';
+		sc.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+		sc.lineWidth = 1;
+		sc.beginPath();
+		/*for(var i=0; i < spectrumCanvas.width; i+=128) {
+			sc.moveTo(i+0.5, 0);
+			sc.lineTo(i+0.5, spectrumCanvas.height);
+		}*/
+		var odd = false;
+		for(var i=55; i < 20000; i*=2) {
+			var hz = i;
+			var peak = (hz*fft.fftSize)/acx.sampleRate;
+			sc.moveTo(Math.round(peak*ratio)+0.5, 0);
+			sc.lineTo(Math.round(peak*ratio)+0.5, spectrumCanvas.height);
+			if(hz >= 440)
+				sc.fillText(hz+' Hz', peak*ratio+5, 10+(odd)*(10));
+			odd = !odd;
+		}
+		
+		for(var i=0; i < spectrumCanvas.height; i+=64) {
+			sc.moveTo(0, spectrumCanvas.height-i+0.5);
+			sc.lineTo(spectrumCanvas.width, spectrumCanvas.height-i+0.5);
+		}
+		sc.stroke();
+		
+		fft.getByteTimeDomainData(fftData);
+		sc.strokeStyle = '#444';
+		sc.lineWidth = 4;
+		sc.beginPath();
+		for(var i=0; i < fftData.length; i++) {
+			sc.lineTo((i)*ratio, spectrumCanvas.height-fftData[i]);
+		}
+		sc.stroke();
+		
+		fft.getByteFrequencyData(fftData);
+		sc.fillStyle = 'rgba(0, 0, 0, 0.15)';
+		
+		sc.strokeStyle = spectrumStyle; //'#9F0';
+		sc.lineWidth = 5;
+		sc.beginPath();
+		sc.moveTo(-10, spectrumCanvas.height+10);
+		var maxval = 0;
+		var peak = [];
+		for(var i=0; i < fftData.length; i+=1) {
+			
+			/*var mag = Math.sqrt(fftData[i]*fftData[i] + fftData[i+1]*fftData[i+1]);
+			var lg = Math.log(mag);
+			//mag -= lg;
+			mag*= (256/360);*/
+			var mag = fftData[i];
+			sc.lineTo(i*ratio, spectrumCanvas.height-mag);
+			//sc.lineTo((i)*ratio, spectrumCanvas.height-fftData[i]);
+			if(mag > maxval && mag < Infinity) {
+				maxval = Math.max(maxval, mag);
+				peak = i;
+			}
+		}
+		sc.lineTo(spectrumCanvas.width+10, spectrumCanvas.height+10);
+		sc.closePath();
+		sc.stroke();
+		sc.fill();
+		
+		var hz = 1024;
+		//peak = (hz*fft.fftSize)/acx.sampleRate;
+		sc.strokeStyle = "rgba(255, 0, 0, 0.5)";
+		sc.lineWidth = 2;
+		sc.beginPath();
+		sc.moveTo(Math.round(peak*ratio), spectrumCanvas.height);
+		sc.lineTo(Math.round(peak*ratio), spectrumCanvas.height-maxval);
+		//sc.stroke();
+		sc.font = "bold 10px sans-serif";
+		sc.textAlign = 'left';
+		sc.fillStyle = '#F00';
+		//sc.fillText("Peak: "+Math.round((peak*acx.sampleRate)/fft.fftSize)+' Hz', 200*ratio, 10);
+		
+		if(spectrumPos >= 0) {
+			sc.strokeStyle = "rgba(0, 128, 255, 0.5)";
+			sc.lineWidth = 2;
+			sc.beginPath();
+			sc.moveTo(Math.round(spectrumPos), spectrumCanvas.height-256);
+			sc.lineTo(Math.round(spectrumPos), spectrumCanvas.height);
+			sc.stroke();
+			var hz = ((spectrumPos/ratio)*acx.sampleRate)/fft.fftSize;
+			sc.fillStyle = '#09F';
+			sc.fillText(Math.round(hz)+' Hz', spectrumPos+2, 33);
+		}
+	};
+	
+	setInterval(updateSpectrum, 1000/30);
+	
+	var source;
+	
+	var startTime = Date.now();
+	
+	var currentBuffer;
+	
+	var stopPlayback = function () {
+		if(source) {
+			source.noteOff(0);
+			source.disconnect(0);
+			fft.disconnect(0);
+			//jsnode.disconnect(0);
+			
+			source = undefined;
+		}
+		togglebtn.textContent = '▶';//►';
+		//cursor.style.left = -cursor.offsetWidth/2+'px';
+		//timeSpan.textContent = timeStyle(0)+' | '+timeStyle(duration);
+	};
+	
+	var startPlayback = function (offset) {
+		if(currentBuffer && !source) {
+			source = acx.createBufferSource();
+			source.loop = true;
+			source.buffer = currentBuffer;
+			source.connect(fft);
+			fft.connect(jsnode);
+			//jsnode.connect(acx.destination);
+			source.connect(acx.destination);
+			source.noteGrainOn(0, offset, currentBuffer.duration-offset);
+			startTime = Date.now() - offset*1000;
+		}
+		togglebtn.innerHTML = '&nbsp;▌▌';
+	};
+	
+	var rewindbtn = global.document.querySelector('#rewind');
+	var togglebtn = global.document.querySelector('#toggleplay');
+	var customAudio = global.document.querySelector('#customAudio');
+	
+	var pausedTime = 0;
+	
+	rewindbtn.addEventListener('click', function () {
+		if(source) { // Not paused
+			stopPlayback();
+			startPlayback(0);
+		}
+		else {
+			stopPlayback();
+			cursor.style.left = -cursor.offsetWidth/2+'px';
+			timeSpan.textContent = timeStyle(0)+' | '+timeStyle(duration);
+			pausedTime = 0;
+		}
+	}, false);
+	
+	togglebtn.addEventListener('click', function (e) {
+		if(source) {
+			pausedTime = (Date.now() - startTime)/1000;
+			stopPlayback();
+		}
+		else if(currentBuffer && !source) {
+			startPlayback(pausedTime);
+			pausedTime = 0;
+		}
+	}, false);
+	
+	
+	
+	var loop = false;
+	loopBox.addEventListener('change', function (e) {
+		loop = this.checked;
+	}, false);
+	customAudio.addEventListener('change', function (e) {
+		var btn = this;
+		btn.disabled = true;
+		var fr = new FileReader();
+		statusSpan.textContent = 'Reading file...';
+		X.abort();
+		fr.onload = function () {
+			statusSpan.textContent = 'Decoding audio...';
+			acx.decodeAudioData(fr.result, function (buffer) {
+				btn.disabled = false;
+				decodeAndAnalyze(buffer);
+			}, function () {
+				statusSpan.innerHTML = '<span style="color: red">An error occurred during decoding</span>';
+				btn.disabled = false;
+			});
+		};
+		fr.readAsArrayBuffer(this.files[0]);
+	}, false);
+	container.addEventListener('mousedown', function (e) {
+		var y = (e.pageY - container.offsetTop);
+		if(y > audiodatacanvas.offsetHeight+sgramcanvas.offsetHeight) return; // On scrollbar
+		if(currentBuffer) {
+			var x = (e.pageX - container.offsetLeft + container.scrollLeft)/timeratio;
+			if(x > currentBuffer.duration || x < 0) return;
+			if(source) {
+				stopPlayback();
+				startPlayback(x);
+			}
+			else {
+				stopPlayback();
+				cursor.style.left = Math.round((Math.min(x, duration))*timeratio-cursor.offsetWidth/2-1)+"px";
+				timeSpan.textContent = timeStyle(x)+' | '+timeStyle(duration);
+				pausedTime = x;
+			}
+		}
+		
+		
+	}, false);
+	container.addEventListener('mousedown', function (e) {
+		e.preventDefault();
+	}, false);
+	spectrumCanvas.addEventListener('mousemove', function (e) {
+		spectrumPos = e.pageX - this.offsetLeft + this.parentNode.scrollLeft;
+	}, false);
+	spectrumCanvas.addEventListener('mouseout', function (e) {
+		spectrumPos = -1;
+	}, false);
+	
+	var waveformtimer = null;
+	
+	var worker = null;
+	var sgramtimer = null;
+	var workerMessage = function (e) {
+		//sgramtimer = setTimeout(function () {
+			if(!worker) return;
+			if(e.data.frames) {
+				for(var j=0; j < e.data.frames.length; j++) {
+					(function () {
+						var data = e.data.frames[j];
+						
+						var index = data.index;
+						var frameCount = data.frameCount;
+						
+						if(index > 50) {
+							//return;
+						}
+						
+						
+						var ratio = timeratio/data.sampleRate;
+						
+						var x = index*frameSize*ratio;
+						for(var i=0; i < frameSize/2; i++) {
+							sgc.fillStyle = 'hsl('+Math.floor((i/(frameSize/2))*360)+', '+100+'%, '+(data.spectrum[i]*150)*50+'%)';
+							sgc.fillRect(x, sgramcanvas.height-(i/(frameSize/2))*sgramcanvas.height, ratio*frameSize*2, sgramcanvas.height/(frameSize/2));
+						}
+					}());
+				}
+			}
+			else {
+				console.log('WORKER:', e.data);
+				worker.onmessage = null;
+				worker.terminate();
+				worker = null;
+			}
+		//}, 0);
+	};
+	
+	var decodeAndAnalyze = function (buffer) {
+		currentBuffer = buffer;
+		stopPlayback();
+		console.log('Audio data decoded');
+		audiodatacanvas.width = sgramcanvas.width = buffer.length*(timeratio/buffer.sampleRate);
+		
+		clearTimeout(waveformtimer);
+		clearTimeout(sgramtimer);
+		
+		if(worker) {
+			worker.onmessage = null;
+			worker.terminate();
+			worker = null;
+		}
+		
+		worker = new Worker('worker.js');
+		worker.onmessage = workerMessage;
+		
+		adc.clearRect(0, 0, audiodatacanvas.width, audiodatacanvas.height);
+		sgc.clearRect(0, 0, sgramcanvas.width, sgramcanvas.height);
+		
+		statusSpan.textContent = 'Done';
+		duration = buffer.duration;
+		
+		container.scrollLeft = 0;
+		cursor.style.left = -cursor.offsetWidth/2+'px';
+		timeSpan.textContent = timeStyle(0)+' | '+timeStyle(duration);
+		rewindbtn.disabled = false;
+		togglebtn.disabled = false;
+		customAudio.disabled = false;
+		
+		var chan = [buffer.getChannelData(0), buffer.getChannelData(1)];
+		
+		// Minutes
+		adc.fillStyle = 'rgba(0, 0, 0, 0.05)';
+		var odd = true;
+		for(var i=0; i < duration/60; i+=60/60) {
+			/*adc.beginPath();
+			adc.moveTo(i*60*timeratio-0.5, 0);
+			adc.lineTo(i*60*timeratio-0.5, audiodatacanvas.height);
+			adc.stroke();*/
+			if(!odd)
+				adc.fillRect(i*60*timeratio, 0, 1*60*timeratio, audiodatacanvas.height);
+			odd = !odd;
+		}
+		
+		adc.strokeStyle = '#AAA';
+		for(var c=0; c < chan.length; c++) {
+			var data = chan[c];
+			if(!data) continue;
+			adc.beginPath();
+			adc.moveTo(0, audiodatacanvas.height/4+(audiodatacanvas.height/2)*c+0.5);
+			adc.lineTo(audiodatacanvas.width, audiodatacanvas.height/4+(audiodatacanvas.height/2)*c+0.5);
+			adc.stroke();
+		}
+		
+		var ratio = timeratio/buffer.sampleRate;
+		
+		var chunkSize = 16*1024;
+		var offset = 0;
+		var lastY = [0, 0];
+		
+		var maxLen = chan[0].length;
+		
+		var drawWaveform = function () {
+			
+			adc.fillStyle = 'black';
+			var data = [];
+			var l = Math.min(maxLen, offset+chunkSize);
+			for(var c=0; c < chan.length; c++) {
+				data = chan[c];
+				if(!data) continue;
+				var x = offset*ratio;
+				adc.beginPath();
+				adc.moveTo(x, audiodatacanvas.height/4+(audiodatacanvas.height/2)*c+lastY[c]*(audiodatacanvas.height/4.1));
+				
+				for(var i=offset; i < l; i+=2) {
+					adc.lineTo(x, audiodatacanvas.height/4+(audiodatacanvas.height/2)*c+data[i]*(audiodatacanvas.height/4.1));
+					//adc.fillRect(x, audiodatacanvas.height/2, 1, data[i]*(audiodatacanvas.height));
+					lastY[c] = data[i];
+					x = i*ratio;
+					if(x > audiodatacanvas.width) break;
+				}
+				
+				if(c === 0) adc.strokeStyle = LChStyle;
+				else adc.strokeStyle = RChStyle;
+				adc.stroke();
+				
+			}
+			offset += chunkSize;
+			
+			if(l >= maxLen) {
+				chan[0] = null;
+				chan[1] = null;
+				data = null;
+				clearTimeout(waveformtimer);
+				return;
+			}
+			
+			waveformtimer = setTimeout(drawWaveform, 0);
+		};
+		
+		waveformtimer = setTimeout(drawWaveform, 0);
+		
+		var channelData = [];
+		for(var c=0; c < buffer.numberOfChannels; c++) {
+			channelData[c] = chan[c];
+		}
+		
+		if(global.document.getElementById('sgrambox').checked) {
+			worker.postMessage({
+				sampleRate: buffer.sampleRate,
+				length: buffer.length,
+				duration: buffer.duration,
+				channelData: channelData,
+				frameSize: frameSize
+			});
+		}
+		
+		startPlayback(0);
+		
+	};
+	
+	var X = new XMLHttpRequest();
+	X.open('GET', musicfile, true);
+	X.responseType = 'arraybuffer';
+	console.log('Downloading audio...');
+	statusSpan.textContent = 'Downloading...';
+	X.addEventListener('load', function () {
+		console.log('Decoding audio...');
+		statusSpan.textContent = 'Decoding audio...';
+		customAudio.disabled = true;
+		sampleSong.innerHTML = '';
+		acx.decodeAudioData(X.response, decodeAndAnalyze, function () {
+			customAudio.disabled = false;
+			statusSpan.innerHTML = '<span style="color: red">An error occurred during decoding</span>';
+		});
+	}, false);
+	X.addEventListener('progress', function (e) {
+		global.document.getElementById('downloadMeter').value = e.loaded/e.total;
+		statusSpan.textContent = 'Downloading... '+Math.round((e.loaded/1024/1024)*100)/100+'Mb of '+Math.round((e.total/1024/1024)*100)/100+'Mb';
+	}, false);
+	X.send();
+	
+}(window));
+</script>
+
+</body></html>
