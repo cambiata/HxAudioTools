@@ -1,6 +1,6 @@
 package examples.assemble;
 
-import audiotools.utils.BytesLoaders;
+import audiotools.utils.BytesLoader;
 import audiotools.utils.Mp3Wav16Decoders;
 import audiotools.Wav16;
 import audiotools.Wav16DSP;
@@ -40,7 +40,19 @@ class Main
 			displayWave(w, 0);
 			Wav16Tools.testplay(w);						
 		};
-		decoders.decodeAll();
+		//decoders.decodeAll();
+		
+		/*
+		BytesLoaders.loadAll(['piano/49.mp3', 'piano/50x.mp3']).handle(function(data) {
+			trace(data);
+		});
+		*/
+		
+		BytesLoaders.loadAllMap(['piano/49.mp3', 'piano/50x.mp3']).handle(function(items) {
+			for (filename in items.keys()) trace(filename);
+		});
+		
+		
 	}
 	
 	static function displayWave(wav16:Wav16, index:Int, text:String='') {

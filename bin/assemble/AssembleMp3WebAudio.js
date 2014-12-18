@@ -7,6 +7,24 @@ function $extend(from, fields) {
 }
 var HxOverrides = function() { };
 HxOverrides.__name__ = true;
+HxOverrides.indexOf = function(a,obj,i) {
+	var len = a.length;
+	if(i < 0) {
+		i += len;
+		if(i < 0) i = 0;
+	}
+	while(i < len) {
+		if(a[i] === obj) return i;
+		i++;
+	}
+	return -1;
+};
+HxOverrides.remove = function(a,obj) {
+	var i = HxOverrides.indexOf(a,obj,0);
+	if(i == -1) return false;
+	a.splice(i,1);
+	return true;
+};
 HxOverrides.iter = function(a) {
 	return { cur : 0, arr : a, hasNext : function() {
 		return this.cur < this.arr.length;
@@ -44,7 +62,7 @@ audiotools.Wav16 = function(channel1,channel2) {
 	this.stereo = false;
 	this.ch1 = channel1;
 	this.ch2 = channel2;
-	if(this.ch2 != null && this.ch2.length != this.ch1.length) throw "Stereo file ints must have same length";
+	if(this.ch2 != null && this.ch2.length != this.ch1.length) throw "Stereo file channels must have same length";
 	this.stereo = this.ch2 != null;
 };
 audiotools.Wav16.__name__ = true;
@@ -155,7 +173,7 @@ audiotools.Wav16DSP.dspMixInto = function(w1,w2,offset,w2length,w2vol,soften) {
 	if(offset == null) offset = 0;
 	var length;
 	if(w2length > 0) length = Std["int"](Math.min(w2.length,w2length)); else length = w2.length;
-	if(offset + length > w1.length) throw "mixinto error";
+	if(offset + length > w1.length) throw "Wav16DSP Error: dspMixInto - ";
 	var softenstart = length - soften;
 	var _g = 0;
 	while(_g < length) {
@@ -403,82 +421,71 @@ audiotools.Wav16Tools.testplay = function(wav16) {
 	return;
 };
 audiotools.utils = {};
-audiotools.utils.BytesLoader = function(filename) {
-	this.filename = filename;
-};
+audiotools.utils.BytesLoader = function() { };
 audiotools.utils.BytesLoader.__name__ = true;
-audiotools.utils.BytesLoader.prototype = {
-	loadBytes: function() {
-		var _g = this;
-		var request = new XMLHttpRequest();
-		request.open("GET",this.filename,true);
-		request.responseType = "arraybuffer";
-		request.onload = function(e) {
-			var arrayBuffer = request.response;
-			if(arrayBuffer != null) {
-				var dataview = new DataView(arrayBuffer);
-				var bytesData = new Array();
-				var _g1 = 0;
-				var _g2 = dataview.byteLength;
-				while(_g1 < _g2) {
-					var i = _g1++;
-					bytesData.push(dataview.getUint8(i));
-				}
-				var bytes = haxe.io.Bytes.ofData(bytesData);
-				_g.onLoaded(bytes,_g.filename);
+audiotools.utils.BytesLoader.load = function(filename) {
+	var f = new tink.core.FutureTrigger();
+	var request = new XMLHttpRequest();
+	request.open("GET",filename,true);
+	request.responseType = "arraybuffer";
+	request.onload = function(e) {
+		var arrayBuffer = request.response;
+		if(arrayBuffer != null) {
+			var dataview = new DataView(arrayBuffer);
+			var bytesData = new Array();
+			var _g1 = 0;
+			var _g = dataview.byteLength;
+			while(_g1 < _g) {
+				var i = _g1++;
+				bytesData.push(dataview.getUint8(i));
 			}
-		};
-		request.send(null);
-		return this;
-	}
-	,onLoaded: function(bytes,filename) {
-	}
-	,setOnLoaded: function(callbck) {
-		this.onLoaded = callbck;
-		return this;
-	}
-	,__class__: audiotools.utils.BytesLoader
-};
-audiotools.utils.BytesLoaders = function(files) {
-	this.loaders = files.map(function(file) {
-		return new audiotools.utils.BytesLoader(file);
-	});
-	var _g = 0;
-	var _g1 = this.loaders;
-	while(_g < _g1.length) {
-		var loader = _g1[_g];
-		++_g;
-		loader.onLoaded = $bind(this,this.onLoaderLoaded);
-	}
-};
-audiotools.utils.BytesLoaders.__name__ = true;
-audiotools.utils.BytesLoaders.prototype = {
-	loadAll: function() {
-		this.loadedCount = 0;
-		this.loadedBytes = new haxe.ds.StringMap();
-		var _g = 0;
-		var _g1 = this.loaders;
-		while(_g < _g1.length) {
-			var loader = _g1[_g];
-			++_g;
-			loader.loadBytes();
+			var bytes = haxe.io.Bytes.ofData(bytesData);
+			f.trigger(tink.core.Outcome.Success({ filename : filename, bytes : bytes}));
 		}
-		return this;
-	}
-	,onLoaderLoaded: function(bytes,filename) {
-		console.log("onLoaderLoaded " + filename);
-		this.loadedBytes.set(filename,bytes);
-		this.loadedCount++;
-		if(this.loadedCount >= this.loaders.length) this.onLoaded(this.loadedBytes);
-	}
-	,onLoaded: function(loadedBytes) {
-		console.log("ALL");
-	}
-	,setOnLoaded: function(onLoadedCallbck) {
-		this.onLoaded = onLoadedCallbck;
-		return this;
-	}
-	,__class__: audiotools.utils.BytesLoaders
+	};
+	request.onerror = function(e1) {
+		f.trigger(tink.core.Outcome.Failure({ filename : filename, message : "Can't load " + filename}));
+	};
+	request.send(null);
+	return f.future;
+};
+audiotools.utils.BytesLoaders = function() { };
+audiotools.utils.BytesLoaders.__name__ = true;
+audiotools.utils.BytesLoaders.loadAll = function(filenames) {
+	return tink.core._Future.Future_Impl_.fromMany((function($this) {
+		var $r;
+		var _g = [];
+		{
+			var _g1 = 0;
+			while(_g1 < filenames.length) {
+				var filename = filenames[_g1];
+				++_g1;
+				_g.push(audiotools.utils.BytesLoader.load(filename));
+			}
+		}
+		$r = _g;
+		return $r;
+	}(this)));
+};
+audiotools.utils.BytesLoaders.loadAllMap = function(filenames) {
+	var f = new tink.core.FutureTrigger();
+	var result = new haxe.ds.StringMap();
+	var this1 = audiotools.utils.BytesLoaders.loadAll(filenames);
+	this1(function(items) {
+		Lambda.iter(items,function(item) {
+			switch(item[1]) {
+			case 0:
+				var loadetBytes = item[2];
+				result.set(loadetBytes.filename,loadetBytes.bytes);
+				break;
+			case 1:
+				var loadError = item[2];
+				break;
+			}
+		});
+		f.trigger(result);
+	});
+	return f.future;
 };
 audiotools.utils.Mp3Wav16Decoder = function(mp3Filename) {
 	this.mp3filename = mp3Filename;
@@ -817,7 +824,14 @@ examples.assemble.Main.main = function() {
 		examples.assemble.Main.displayWave(w,0);
 		audiotools.Wav16Tools.testplay(w);
 	};
-	decoders.decodeAll();
+	var this1 = audiotools.utils.BytesLoaders.loadAllMap(["piano/49.mp3","piano/50x.mp3"]);
+	this1(function(items) {
+		var $it0 = items.keys();
+		while( $it0.hasNext() ) {
+			var filename = $it0.next();
+			console.log(filename);
+		}
+	});
 };
 examples.assemble.Main.displayWave = function(wav16,index,text) {
 	if(text == null) text = "";
@@ -920,6 +934,10 @@ format.wav.Writer.prototype = {
 };
 var haxe = {};
 haxe.ds = {};
+haxe.ds.Option = { __ename__ : true, __constructs__ : ["Some","None"] };
+haxe.ds.Option.Some = function(v) { var $x = ["Some",0,v]; $x.__enum__ = haxe.ds.Option; return $x; };
+haxe.ds.Option.None = ["None",1];
+haxe.ds.Option.None.__enum__ = haxe.ds.Option;
 haxe.ds.StringMap = function() {
 	this.h = { };
 };
@@ -931,6 +949,13 @@ haxe.ds.StringMap.prototype = {
 	}
 	,get: function(key) {
 		return this.h["$" + key];
+	}
+	,keys: function() {
+		var a = [];
+		for( var key in this.h ) {
+		if(this.h.hasOwnProperty(key)) a.push(key.substr(1));
+		}
+		return HxOverrides.iter(a);
 	}
 	,__class__: haxe.ds.StringMap
 };
@@ -1347,9 +1372,540 @@ js.Lib.__name__ = true;
 js.Lib.alert = function(v) {
 	alert(js.Boot.__string_rec(v,""));
 };
+var tink = {};
+tink.core = {};
+tink.core._Callback = {};
+tink.core._Callback.Callback_Impl_ = function() { };
+tink.core._Callback.Callback_Impl_.__name__ = true;
+tink.core._Callback.Callback_Impl_._new = function(f) {
+	return f;
+};
+tink.core._Callback.Callback_Impl_.invoke = function(this1,data) {
+	this1(data);
+};
+tink.core._Callback.Callback_Impl_.fromNiladic = function(f) {
+	return function(r) {
+		f();
+	};
+};
+tink.core._Callback.Callback_Impl_.fromMany = function(callbacks) {
+	return function(v) {
+		var _g = 0;
+		while(_g < callbacks.length) {
+			var callback = callbacks[_g];
+			++_g;
+			callback(v);
+		}
+	};
+};
+tink.core._Callback.CallbackLink_Impl_ = function() { };
+tink.core._Callback.CallbackLink_Impl_.__name__ = true;
+tink.core._Callback.CallbackLink_Impl_._new = function(link) {
+	return link;
+};
+tink.core._Callback.CallbackLink_Impl_.dissolve = function(this1) {
+	if(this1 != null) this1();
+};
+tink.core._Callback.CallbackLink_Impl_.toCallback = function(this1) {
+	var f = this1;
+	return function(r) {
+		f();
+	};
+};
+tink.core._Callback.CallbackLink_Impl_.fromFunction = function(f) {
+	return f;
+};
+tink.core._Callback.CallbackLink_Impl_.fromMany = function(callbacks) {
+	return function() {
+		var _g = 0;
+		while(_g < callbacks.length) {
+			var cb = callbacks[_g];
+			++_g;
+			if(cb != null) cb();
+		}
+	};
+};
+tink.core._Callback.Cell = function() {
+};
+tink.core._Callback.Cell.__name__ = true;
+tink.core._Callback.Cell.get = function() {
+	if(tink.core._Callback.Cell.pool.length > 0) return tink.core._Callback.Cell.pool.pop(); else return new tink.core._Callback.Cell();
+};
+tink.core._Callback.Cell.prototype = {
+	free: function() {
+		this.cb = null;
+		tink.core._Callback.Cell.pool.push(this);
+	}
+	,__class__: tink.core._Callback.Cell
+};
+tink.core._Callback.CallbackList_Impl_ = function() { };
+tink.core._Callback.CallbackList_Impl_.__name__ = true;
+tink.core._Callback.CallbackList_Impl_._new = function() {
+	return [];
+};
+tink.core._Callback.CallbackList_Impl_.get_length = function(this1) {
+	return this1.length;
+};
+tink.core._Callback.CallbackList_Impl_.add = function(this1,cb) {
+	var cell;
+	if(tink.core._Callback.Cell.pool.length > 0) cell = tink.core._Callback.Cell.pool.pop(); else cell = new tink.core._Callback.Cell();
+	cell.cb = cb;
+	this1.push(cell);
+	return function() {
+		if(HxOverrides.remove(this1,cell)) {
+			cell.cb = null;
+			tink.core._Callback.Cell.pool.push(cell);
+		}
+		cell = null;
+	};
+};
+tink.core._Callback.CallbackList_Impl_.invoke = function(this1,data) {
+	var _g = 0;
+	var _g1 = this1.slice();
+	while(_g < _g1.length) {
+		var cell = _g1[_g];
+		++_g;
+		if(cell.cb != null) cell.cb(data);
+	}
+};
+tink.core._Callback.CallbackList_Impl_.clear = function(this1) {
+	var _g = 0;
+	var _g1 = this1.splice(0,this1.length);
+	while(_g < _g1.length) {
+		var cell = _g1[_g];
+		++_g;
+		cell.cb = null;
+		tink.core._Callback.Cell.pool.push(cell);
+	}
+};
+tink.core.Either = { __ename__ : true, __constructs__ : ["Left","Right"] };
+tink.core.Either.Left = function(a) { var $x = ["Left",0,a]; $x.__enum__ = tink.core.Either; return $x; };
+tink.core.Either.Right = function(b) { var $x = ["Right",1,b]; $x.__enum__ = tink.core.Either; return $x; };
+tink.core._Error = {};
+tink.core._Error.ErrorCode_Impl_ = function() { };
+tink.core._Error.ErrorCode_Impl_.__name__ = true;
+tink.core.TypedError = function(code,message,pos) {
+	if(code == null) code = 500;
+	this.code = code;
+	this.message = message;
+	this.pos = pos;
+};
+tink.core.TypedError.__name__ = true;
+tink.core.TypedError.withData = function(code,message,data,pos) {
+	if(code == null) code = 500;
+	var ret = new tink.core.TypedError(code,message,pos);
+	ret.data = data;
+	return ret;
+};
+tink.core.TypedError.prototype = {
+	printPos: function() {
+		return this.pos.className + "." + this.pos.methodName + ":" + this.pos.lineNumber;
+	}
+	,toString: function() {
+		var ret = "Error: " + this.message;
+		if(this.pos != null) ret += " " + this.printPos();
+		return ret;
+	}
+	,throwSelf: function() {
+		throw this;
+	}
+	,__class__: tink.core.TypedError
+};
+tink.core._Future = {};
+tink.core._Future.Future_Impl_ = function() { };
+tink.core._Future.Future_Impl_.__name__ = true;
+tink.core._Future.Future_Impl_._new = function(f) {
+	return f;
+};
+tink.core._Future.Future_Impl_.handle = function(this1,callback) {
+	return this1(callback);
+};
+tink.core._Future.Future_Impl_.gather = function(this1) {
+	var op = new tink.core.FutureTrigger();
+	var self = this1;
+	return tink.core._Future.Future_Impl_._new(function(cb) {
+		if(self != null) {
+			this1($bind(op,op.trigger));
+			self = null;
+		}
+		return op.future(cb);
+	});
+};
+tink.core._Future.Future_Impl_.first = function(this1,other) {
+	return tink.core._Future.Future_Impl_.async(function(cb) {
+		this1(cb);
+		other(cb);
+	});
+};
+tink.core._Future.Future_Impl_.map = function(this1,f,gather) {
+	if(gather == null) gather = true;
+	var ret = tink.core._Future.Future_Impl_._new(function(callback) {
+		return this1(function(result) {
+			var data = f(result);
+			callback(data);
+		});
+	});
+	if(gather) return tink.core._Future.Future_Impl_.gather(ret); else return ret;
+};
+tink.core._Future.Future_Impl_.flatMap = function(this1,next,gather) {
+	if(gather == null) gather = true;
+	var ret = tink.core._Future.Future_Impl_.flatten(tink.core._Future.Future_Impl_.map(this1,next,gather));
+	if(gather) return tink.core._Future.Future_Impl_.gather(ret); else return ret;
+};
+tink.core._Future.Future_Impl_.merge = function(this1,other,merger,gather) {
+	if(gather == null) gather = true;
+	return tink.core._Future.Future_Impl_.flatMap(this1,function(t) {
+		return tink.core._Future.Future_Impl_.map(other,function(a) {
+			return merger(t,a);
+		},false);
+	},gather);
+};
+tink.core._Future.Future_Impl_.flatten = function(f) {
+	return tink.core._Future.Future_Impl_._new(function(callback) {
+		var ret = null;
+		ret = f(function(next) {
+			ret = next(function(result) {
+				callback(result);
+			});
+		});
+		return ret;
+	});
+};
+tink.core._Future.Future_Impl_.fromTrigger = function(trigger) {
+	return trigger.future;
+};
+tink.core._Future.Future_Impl_.ofMany = function(futures,gather) {
+	if(gather == null) gather = true;
+	var ret = tink.core._Future.Future_Impl_.sync([]);
+	var _g = 0;
+	while(_g < futures.length) {
+		var f = [futures[_g]];
+		++_g;
+		ret = tink.core._Future.Future_Impl_.flatMap(ret,(function(f) {
+			return function(results) {
+				return tink.core._Future.Future_Impl_.map(f[0],(function() {
+					return function(result) {
+						return results.concat([result]);
+					};
+				})(),false);
+			};
+		})(f),false);
+	}
+	if(gather) return tink.core._Future.Future_Impl_.gather(ret); else return ret;
+};
+tink.core._Future.Future_Impl_.fromMany = function(futures) {
+	return tink.core._Future.Future_Impl_.ofMany(futures);
+};
+tink.core._Future.Future_Impl_.lazy = function(l) {
+	return tink.core._Future.Future_Impl_._new(function(cb) {
+		var data = l();
+		cb(data);
+		return null;
+	});
+};
+tink.core._Future.Future_Impl_.sync = function(v) {
+	return tink.core._Future.Future_Impl_._new(function(callback) {
+		callback(v);
+		return null;
+	});
+};
+tink.core._Future.Future_Impl_.async = function(f,lazy) {
+	if(lazy == null) lazy = false;
+	if(lazy) return tink.core._Future.Future_Impl_.flatten(tink.core._Future.Future_Impl_.lazy(tink.core._Lazy.Lazy_Impl_.ofFunc((function(f1,f2,a1) {
+		return function() {
+			return f1(f2,a1);
+		};
+	})(tink.core._Future.Future_Impl_.async,f,false)))); else {
+		var op = new tink.core.FutureTrigger();
+		f($bind(op,op.trigger));
+		return op.future;
+	}
+};
+tink.core._Future.Future_Impl_.or = function(a,b) {
+	return tink.core._Future.Future_Impl_.first(a,b);
+};
+tink.core._Future.Future_Impl_.either = function(a,b) {
+	return tink.core._Future.Future_Impl_.first(tink.core._Future.Future_Impl_.map(a,tink.core.Either.Left,false),tink.core._Future.Future_Impl_.map(b,tink.core.Either.Right,false));
+};
+tink.core._Future.Future_Impl_.and = function(a,b) {
+	return tink.core._Future.Future_Impl_.merge(a,b,function(a1,b1) {
+		return { a : a1, b : b1};
+	});
+};
+tink.core._Future.Future_Impl_._tryFailingFlatMap = function(f,map) {
+	return tink.core._Future.Future_Impl_.flatMap(f,function(o) {
+		switch(o[1]) {
+		case 0:
+			var d = o[2];
+			return map(d);
+		case 1:
+			var f1 = o[2];
+			return tink.core._Future.Future_Impl_.sync(tink.core.Outcome.Failure(f1));
+		}
+	});
+};
+tink.core._Future.Future_Impl_._tryFlatMap = function(f,map) {
+	return tink.core._Future.Future_Impl_.flatMap(f,function(o) {
+		switch(o[1]) {
+		case 0:
+			var d = o[2];
+			return tink.core._Future.Future_Impl_.map(map(d),tink.core.Outcome.Success);
+		case 1:
+			var f1 = o[2];
+			return tink.core._Future.Future_Impl_.sync(tink.core.Outcome.Failure(f1));
+		}
+	});
+};
+tink.core._Future.Future_Impl_._tryFailingMap = function(f,map) {
+	return tink.core._Future.Future_Impl_.map(f,function(o) {
+		return tink.core.OutcomeTools.flatMap(o,tink.core._Outcome.OutcomeMapper_Impl_.withSameError(map));
+	});
+};
+tink.core._Future.Future_Impl_._tryMap = function(f,map) {
+	return tink.core._Future.Future_Impl_.map(f,function(o) {
+		return tink.core.OutcomeTools.map(o,map);
+	});
+};
+tink.core._Future.Future_Impl_._flatMap = function(f,map) {
+	return tink.core._Future.Future_Impl_.flatMap(f,map);
+};
+tink.core._Future.Future_Impl_._map = function(f,map) {
+	return tink.core._Future.Future_Impl_.map(f,map);
+};
+tink.core._Future.Future_Impl_.trigger = function() {
+	return new tink.core.FutureTrigger();
+};
+tink.core.FutureTrigger = function() {
+	var _g = this;
+	this.list = [];
+	this.future = tink.core._Future.Future_Impl_._new(function(callback) {
+		if(_g.list == null) {
+			callback(_g.result);
+			return null;
+		} else return tink.core._Callback.CallbackList_Impl_.add(_g.list,callback);
+	});
+};
+tink.core.FutureTrigger.__name__ = true;
+tink.core.FutureTrigger.prototype = {
+	asFuture: function() {
+		return this.future;
+	}
+	,trigger: function(result) {
+		if(this.list == null) return false; else {
+			var list = this.list;
+			this.list = null;
+			this.result = result;
+			tink.core._Callback.CallbackList_Impl_.invoke(list,result);
+			tink.core._Callback.CallbackList_Impl_.clear(list);
+			return true;
+		}
+	}
+	,__class__: tink.core.FutureTrigger
+};
+tink.core._Lazy = {};
+tink.core._Lazy.Lazy_Impl_ = function() { };
+tink.core._Lazy.Lazy_Impl_.__name__ = true;
+tink.core._Lazy.Lazy_Impl_._new = function(r) {
+	return r;
+};
+tink.core._Lazy.Lazy_Impl_.get = function(this1) {
+	return this1();
+};
+tink.core._Lazy.Lazy_Impl_.ofFunc = function(f) {
+	var result = null;
+	return function() {
+		if(f != null) {
+			result = f();
+			f = null;
+		}
+		return result;
+	};
+};
+tink.core._Lazy.Lazy_Impl_.map = function(this1,f) {
+	return tink.core._Lazy.Lazy_Impl_.ofFunc(function() {
+		return f(this1());
+	});
+};
+tink.core._Lazy.Lazy_Impl_.flatMap = function(this1,f) {
+	return tink.core._Lazy.Lazy_Impl_.ofFunc(function() {
+		var this2 = f(this1());
+		return this2();
+	});
+};
+tink.core._Lazy.Lazy_Impl_.ofConst = function(c) {
+	return function() {
+		return c;
+	};
+};
+tink.core.Outcome = { __ename__ : true, __constructs__ : ["Success","Failure"] };
+tink.core.Outcome.Success = function(data) { var $x = ["Success",0,data]; $x.__enum__ = tink.core.Outcome; return $x; };
+tink.core.Outcome.Failure = function(failure) { var $x = ["Failure",1,failure]; $x.__enum__ = tink.core.Outcome; return $x; };
+tink.core.OutcomeTools = function() { };
+tink.core.OutcomeTools.__name__ = true;
+tink.core.OutcomeTools.sure = function(outcome) {
+	switch(outcome[1]) {
+	case 0:
+		var data = outcome[2];
+		return data;
+	case 1:
+		var failure = outcome[2];
+		if(js.Boot.__instanceof(failure,tink.core.TypedError)) return failure.throwSelf(); else throw failure;
+		break;
+	}
+};
+tink.core.OutcomeTools.toOption = function(outcome) {
+	switch(outcome[1]) {
+	case 0:
+		var data = outcome[2];
+		return haxe.ds.Option.Some(data);
+	case 1:
+		return haxe.ds.Option.None;
+	}
+};
+tink.core.OutcomeTools.toOutcome = function(option,pos) {
+	switch(option[1]) {
+	case 0:
+		var value = option[2];
+		return tink.core.Outcome.Success(value);
+	case 1:
+		return tink.core.Outcome.Failure(new tink.core.TypedError(404,"Some value expected but none found in " + pos.fileName + "@line " + pos.lineNumber,{ fileName : "Outcome.hx", lineNumber : 37, className : "tink.core.OutcomeTools", methodName : "toOutcome"}));
+	}
+};
+tink.core.OutcomeTools.orUse = function(outcome,fallback) {
+	switch(outcome[1]) {
+	case 0:
+		var data = outcome[2];
+		return data;
+	case 1:
+		return fallback();
+	}
+};
+tink.core.OutcomeTools.orTry = function(outcome,fallback) {
+	switch(outcome[1]) {
+	case 0:
+		return outcome;
+	case 1:
+		return fallback();
+	}
+};
+tink.core.OutcomeTools.equals = function(outcome,to) {
+	switch(outcome[1]) {
+	case 0:
+		var data = outcome[2];
+		return data == to;
+	case 1:
+		return false;
+	}
+};
+tink.core.OutcomeTools.map = function(outcome,transform) {
+	switch(outcome[1]) {
+	case 0:
+		var a = outcome[2];
+		return tink.core.Outcome.Success(transform(a));
+	case 1:
+		var f = outcome[2];
+		return tink.core.Outcome.Failure(f);
+	}
+};
+tink.core.OutcomeTools.isSuccess = function(outcome) {
+	switch(outcome[1]) {
+	case 0:
+		return true;
+	default:
+		return false;
+	}
+};
+tink.core.OutcomeTools.flatMap = function(o,mapper) {
+	return tink.core._Outcome.OutcomeMapper_Impl_.apply(mapper,o);
+};
+tink.core._Outcome = {};
+tink.core._Outcome.OutcomeMapper_Impl_ = function() { };
+tink.core._Outcome.OutcomeMapper_Impl_.__name__ = true;
+tink.core._Outcome.OutcomeMapper_Impl_._new = function(f) {
+	return { f : f};
+};
+tink.core._Outcome.OutcomeMapper_Impl_.apply = function(this1,o) {
+	return this1.f(o);
+};
+tink.core._Outcome.OutcomeMapper_Impl_.withSameError = function(f) {
+	return tink.core._Outcome.OutcomeMapper_Impl_._new(function(o) {
+		switch(o[1]) {
+		case 0:
+			var d = o[2];
+			return f(d);
+		case 1:
+			var f1 = o[2];
+			return tink.core.Outcome.Failure(f1);
+		}
+	});
+};
+tink.core._Outcome.OutcomeMapper_Impl_.withEitherError = function(f) {
+	return tink.core._Outcome.OutcomeMapper_Impl_._new(function(o) {
+		switch(o[1]) {
+		case 0:
+			var d = o[2];
+			{
+				var _g = f(d);
+				switch(_g[1]) {
+				case 0:
+					var d1 = _g[2];
+					return tink.core.Outcome.Success(d1);
+				case 1:
+					var f1 = _g[2];
+					return tink.core.Outcome.Failure(tink.core.Either.Right(f1));
+				}
+			}
+			break;
+		case 1:
+			var f2 = o[2];
+			return tink.core.Outcome.Failure(tink.core.Either.Left(f2));
+		}
+	});
+};
+tink.core._Pair = {};
+tink.core._Pair.Pair_Impl_ = function() { };
+tink.core._Pair.Pair_Impl_.__name__ = true;
+tink.core._Pair.Pair_Impl_._new = function(a,b) {
+	return { a : a, b : b};
+};
+tink.core._Pair.Pair_Impl_.get_a = function(this1) {
+	return this1.a;
+};
+tink.core._Pair.Pair_Impl_.get_b = function(this1) {
+	return this1.b;
+};
+tink.core._Pair.Pair_Impl_.toBool = function(this1) {
+	return this1 != null;
+};
+tink.core._Pair.Pair_Impl_.isNil = function(this1) {
+	return this1 == null;
+};
+tink.core._Pair.Pair_Impl_.nil = function() {
+	return null;
+};
+tink.core._Pair.MPair_Impl_ = function() { };
+tink.core._Pair.MPair_Impl_.__name__ = true;
+tink.core._Pair.MPair_Impl_._new = function(a,b) {
+	return { a : a, b : b};
+};
+tink.core._Pair.MPair_Impl_.get_a = function(this1) {
+	return this1.a;
+};
+tink.core._Pair.MPair_Impl_.get_b = function(this1) {
+	return this1.b;
+};
+tink.core._Pair.MPair_Impl_.set_a = function(this1,v) {
+	return this1.a = v;
+};
+tink.core._Pair.MPair_Impl_.set_b = function(this1,v) {
+	return this1.b = v;
+};
 function $iterator(o) { if( o instanceof Array ) return function() { return HxOverrides.iter(o); }; return typeof(o.iterator) == 'function' ? $bind(o,o.iterator) : o.iterator; }
 var $_, $fid = 0;
 function $bind(o,m) { if( m == null ) return null; if( m.__id__ == null ) m.__id__ = $fid++; var f; if( o.hx__closures__ == null ) o.hx__closures__ = {}; else f = o.hx__closures__[m.__id__]; if( f == null ) { f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; o.hx__closures__[m.__id__] = f; } return f; }
+if(Array.prototype.indexOf) HxOverrides.indexOf = function(a,o,i) {
+	return Array.prototype.indexOf.call(a,o,i);
+};
 Math.NaN = Number.NaN;
 Math.NEGATIVE_INFINITY = Number.NEGATIVE_INFINITY;
 Math.POSITIVE_INFINITY = Number.POSITIVE_INFINITY;
@@ -1381,5 +1937,26 @@ if(Array.prototype.map == null) Array.prototype.map = function(f) {
 	return a;
 };
 audiotools.Wav16Tools.SAMPLERATE = 44100;
+tink.core._Callback.Cell.pool = [];
+tink.core._Error.ErrorCode_Impl_.BadRequest = 400;
+tink.core._Error.ErrorCode_Impl_.Unauthorized = 401;
+tink.core._Error.ErrorCode_Impl_.PaymentRequired = 402;
+tink.core._Error.ErrorCode_Impl_.Forbidden = 403;
+tink.core._Error.ErrorCode_Impl_.NotFound = 404;
+tink.core._Error.ErrorCode_Impl_.MethodNotAllowed = 405;
+tink.core._Error.ErrorCode_Impl_.Gone = 410;
+tink.core._Error.ErrorCode_Impl_.NotAcceptable = 406;
+tink.core._Error.ErrorCode_Impl_.Timeout = 408;
+tink.core._Error.ErrorCode_Impl_.Conflict = 409;
+tink.core._Error.ErrorCode_Impl_.OutOfRange = 416;
+tink.core._Error.ErrorCode_Impl_.ExpectationFailed = 417;
+tink.core._Error.ErrorCode_Impl_.I_am_a_Teapot = 418;
+tink.core._Error.ErrorCode_Impl_.AuthenticationTimeout = 419;
+tink.core._Error.ErrorCode_Impl_.UnprocessableEntity = 422;
+tink.core._Error.ErrorCode_Impl_.InternalError = 500;
+tink.core._Error.ErrorCode_Impl_.NotImplemented = 501;
+tink.core._Error.ErrorCode_Impl_.ServiceUnavailable = 503;
+tink.core._Error.ErrorCode_Impl_.InsufficientStorage = 507;
+tink.core._Error.ErrorCode_Impl_.BandwidthLimitExceeded = 509;
 examples.assemble.Main.main();
 })();

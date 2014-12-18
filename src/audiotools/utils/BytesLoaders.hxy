@@ -1,0 +1,12 @@
+package audiotools.utils;
+import audiotools.utils.BytesLoader;
+import haxe.io.Bytes;
+import tink.core.Future;
+import tink.core.Outcome;
+
+
+using Lambda;
+/**
+ * BytesLoaders
+ * @author Jonas Nyström
+ */
