@@ -74,8 +74,8 @@ class Mp3Decoder
 			var tempFilename = (tempPath != '') ? '$tempPath/temp.wav' : 'temp.wav';
 			var command = Sys.command('sox', [this.mp3filename, tempFilename]);
 			var wavBytes = File.getBytes(tempFilename);
-			f.trigger(Success( { filename:filename, bytes: bytes}));
 			FileSystem.deleteFile(tempFilename);
+			f.trigger(Success( { filename:filename, bytes: bytes}));
 		} else {			
 			f.trigger(Failure( { filename:filename, message: 'Can\'t find $filename'})); 				
 		}
@@ -125,17 +125,17 @@ class Mp3Decoder
 	
 	#if (js)
 	
-		public static var context:AudioContext;
-	
+		static var context:AudioContext;
+		public static function setContext(context:AudioContext) Mp3Wav16Decoder.context = context;
 		public function getWavFile(filename:String):Surprise<DecodedMp3, DecodedError> {
 			
 			var f = Future.trigger();
 			
-			if (this.context == null) {
+			if (context == null) {
 				Lib.alert('No AudioContext!');							
 				f.trigger(Failure( { filename:filename, message:'No AudioContext!'})); 	
 			}
-			new Mp3ToBuffer(this.mp3filename, context).setLoadedHandler(function(buffer:AudioBuffer, filename:String) {
+			new Mp3ToBuffer(filename, context).setLoadedHandler(function(buffer:AudioBuffer, filename:String) {
 				
 				
 				var bytes:Bytes = null;					

@@ -10,6 +10,8 @@ using Lambda;
  */
 class Mp3Wav16Decoders 
 {
+	
+	
 	var decodedFiles:Map<String, Wav16>;
 	var decoders:Array<Mp3Wav16Decoder>;
 	var decodedCount:Int;

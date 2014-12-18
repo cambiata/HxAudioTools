@@ -2,7 +2,8 @@ package examples.decode;
 
 import audiotools.utils.Mp3Decoder;
 import audiotools.utils.Mp3Wav16Decoder;
-import audiotools.utils.Mp3Wav16Decoders;
+import tink.core.Outcome;
+//import audiotools.utils.Mp3Wav16Decoders;
 import audiotools.Wav16;
 import audiotools.Wav16Tools;
 using audiotools.Wav16DSP;
@@ -15,6 +16,19 @@ class Main
 {
 	static function main() 
 	{
+		#if js
+		Mp3Wav16Decoders.setContext(audiotools.webaudio.utils.WebAudioTools.getAudioContext());
+		#end
+		var decoder = Mp3Wav16Decoder.decode('sample.mp3');
+		decoder.handle(function(data) trace('decoded...'));
+		
+		Mp3Wav16Decoders.decodeAll(['sample.mp3', 'leadvox.mp3']).handle(function (items) {
+			for (item in items) switch item {
+				case Outcome.Success(wav16file):trace(wav16file.filename);
+				case Outcome.Failure(wav16error): trace(wav16error.message);
+			}
+		});
+		/*
 		var decoders = new Mp3Wav16Decoders(['sample.mp3', 'leadvox.mp3']);		
 		decoders.allDecoded = function(decodedFiles:Map<String, Wav16>) {
 			var i = 0;
@@ -31,6 +45,7 @@ class Main
 			Wav16Tools.testplay(wMixedReverse);
 		}		
 		decoders.decodeAll();				
+		*/
 	}
 	
 	static function displayWave(wav16:Wav16, index:Int, text:String) {

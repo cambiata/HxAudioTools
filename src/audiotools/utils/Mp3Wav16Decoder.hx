@@ -5,7 +5,8 @@ package audiotools.utils;
 import audiotools.Wav16;
 import haxe.ds.Vector;
 import haxe.io.Bytes;
-
+import tink.core.Future;
+import tink.core.Outcome;
 
 #if (sys)
 import sys.FileSystem;
@@ -24,20 +25,33 @@ import js.html.audio.AudioContext;
 import audiotools.openfl.utils.WaveEncoder;
 import audiotools.openfl.utils.ByteArrayTools;
 import flash.events.Event;
+import flash.events.IOErrorEvent;
 import flash.media.Sound;
 import flash.net.URLLoader;
 import flash.net.URLLoaderDataFormat;
 import flash.net.URLRequest;
 import flash.utils.ByteArray;
 #end
-
+using Lambda;
 /**
  * Mp3Decoder
  * @author Jonas Nyström
  */
 
+  typedef Wav16File= {
+	 filename:String,
+	 w16: Wav16,	 
+ }
+ 
+   typedef Wav16Error = {
+	 filename:String,
+	 message:String,
+ }
+ 
+ 
 class Mp3Wav16Decoder 
 {
+	/*
 	var mp3filename:String;
 
 	public function new(mp3Filename:String) 
@@ -49,20 +63,32 @@ class Mp3Wav16Decoder
 		this.getWavFile();
 		return this;
 	}	
-	
+	*/
 	#if (sys)	
-		public function getWavFile(tempPath:String = '') {
-			var tempFilename = (tempPath != '') ? '$tempPath/temp.wav' : 'temp.wav';
-			var command = Sys.command('sox', [this.mp3filename, tempFilename]);
-			var w16 = Wav16.fromFile(tempFilename);
-			FileSystem.deleteFile(tempFilename);			
-			this.converted(w16, this.mp3filename);
+	static public function decode(filename:String, tempPath:String = ''):Surprise<Wav16File, Wav16Error> {
+			var f = Future.trigger();
+			
+			if (FileSystem.exists(filename)) {
+				var tempFilename = (tempPath != '') ? '$tempPath/temp.wav' : 'temp.wav';
+				var command = Sys.command('sox', [this.mp3filename, tempFilename]);
+				var w16 = Wav16.fromFile(tempFilename);
+				FileSystem.deleteFile(tempFilename);			
+				f.trigger(Success( { filename:filename, w16: w16}));
+			} else {			
+				f.trigger(Failure( { filename:filename, message: 'Can\'t find $filename'})); 				
+			}
+			
+			return f.asFuture();
+			
 		}
 	#end
 
 	#if (flash) 
-		public function getWavFile() {
-			var loader = new URLLoader(new URLRequest(this.mp3filename));
+	static 	public function decode(filename:String ) :Surprise<Wav16File, Wav16Error> {
+			
+			var f = Future.trigger();
+			
+			var loader:URLLoader = new URLLoader();
 			loader.dataFormat = URLLoaderDataFormat.BINARY;
 			loader.addEventListener(Event.COMPLETE, function(e) {
 				var data:ByteArray = cast loader.data;			
@@ -78,27 +104,43 @@ class Mp3Wav16Decoder
 				var wavBytes = ByteArrayTools.toBytes(wavEncodedByteArray);
 				var aInts = Wav16Tools.stereoToInts(wavBytes, true);
 				var w16 = new Wav16(aInts[0], aInts[1]);			
-				this.converted(w16, this.mp3filename);			
+				f.trigger(Success( { filename:filename, w16: w16}));	
 			});
+			loader.addEventListener(IOErrorEvent.IO_ERROR, function(e:IOErrorEvent) {
+				f.trigger(Failure( { filename:filename, message: e.text})); 		
+			});			
+			loader.load(new URLRequest(filename));
+			
+			return f.asFuture();
+			
 		}
 	#end	
 	
 	#if (js)
 	
+	/*
 		var context:AudioContext;
 		public var buffer(default, null):AudioBuffer;
+		
+		
+		
 		public function setContext(context:AudioContext) {
 			this.context = context;
 			return this;
 		}	
-	
-		public function getWavFile() {
-			if (this.context == null) {
+		*/
+		public static var context:AudioContext;
+		
+	static public function decode(filename:String ) :Surprise<Wav16File, Wav16Error> {
+			
+			var f = Future.trigger();
+			
+			if (context == null) {
 				Lib.alert('No AudioContext!');			
-				throw "No AudioContext";
+				f.trigger(Failure( { filename:filename, message:'No AudioContext!'})); 	
 			}
-			new Mp3ToBuffer(this.mp3filename, context).setLoadedHandler(function(buffer:AudioBuffer, filename:String) {
-				this.buffer = buffer;
+			new Mp3ToBuffer(filename, context).setLoadedHandler(function(buffer:AudioBuffer, filename:String) {
+				
 				
 				var wavBytes:Bytes = null;
 					
@@ -125,13 +167,14 @@ class Mp3Wav16Decoder
 					w16 = new Wav16(leftInts);
 				}				
 
-				this.converted(w16, this.mp3filename);							
+				f.trigger(Success( { filename:filename, w16: w16}));						
 				
 			}).load();		
 			
+			return f.asFuture();
 		}
 	#end
-	
+	/*
 	dynamic public function converted(wav16:Wav16, mp3Filename:String) {
 		trace(wav16.ch1.length);
 		trace(mp3filename);
@@ -141,10 +184,31 @@ class Mp3Wav16Decoder
 		this.converted = callbck;
 		return this;		
 	}
-	
-	
+	*/
+}
 
+class Mp3Wav16Decoders
+{
+	#if js
+	public static function setContext(context:AudioContext) Mp3Wav16Decoder.context = context;
+	#end
 	
-	
+	static public function decodeAll(filenames:Array<String>): Future<Array<Outcome<Wav16File, Wav16Error>>> {
+		return [ for (filename in filenames) Mp3Wav16Decoder.decode(filename) ];
+	} 	
+
+	static public function decodeAllMap(filenames:Array<String>):Future<Map<String, Wav16>> {		
+		var f = Future.trigger();
+		var result = new Map<String, Wav16>();		
+		decodeAll(filenames).handle(function(items:Array<Outcome<Wav16File, Wav16Error>>) {						
+			items.iter(function(item) switch item {
+					case Outcome.Success(wav16file): result.set(wav16file.filename, wav16file.w16);
+					case Failure(wav16Error): 
+			});
+			f.trigger(result);
+		});
+		return f.asFuture();		
+	}	
 	
 }
+
