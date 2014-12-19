@@ -5,6 +5,7 @@ import audiotools.utils.Mp3Wav16Decoder;
 import audiotools.Wav16;
 import audiotools.Wav16DSP;
 import audiotools.Wav16Tools;
+import audiotools.webaudio.WebAudioTools;
 
 using Lambda;
 /**
@@ -27,7 +28,8 @@ class Main
 		var mp3start = 49;
 		var mp3end = 60;		
 		var files = [for (i in mp3start...mp3end) i].map(function(i) return 'piano/$i.mp3');
-		var decoders = Mp3Wav16Decoders.decodeAllMap(files).handle(function(data) {
+		
+		Mp3Wav16Decoders.decodeAllMap(files).handle(function(data) {
 			trace('all decoded');			
 			var w49:Wav16  = data.get('piano/49.mp3');						
 			var w50:Wav16  = data.get('piano/50.mp3');						
@@ -37,21 +39,8 @@ class Main
 			Wav16DSP.wspMixInto(w, w56, 0);	
 			Wav16DSP.wspMixInto(w, w50, Wav16Tools.toSamples(2));
 			displayWave(w, 0);
-			Wav16Tools.testplay(w);						
+			Wav16Tools.testplay(w);		
 		});
-		//decoders.decodeAll();
-		
-		/*
-		BytesLoaders.loadAll(['piano/49.mp3', 'piano/50x.mp3']).handle(function(data) {
-			trace(data);
-		});
-		*/
-		
-		BytesLoaders.loadAllMap(['piano/49.mp3', 'piano/50x.mp3']).handle(function(items) {
-			for (filename in items.keys()) trace(filename);
-		});
-		
-		
 	}
 	
 	static function displayWave(wav16:Wav16, index:Int, text:String='') {

@@ -164,7 +164,7 @@ class Wav16Tools
 			return;
 		#end
 		#if js
-			audiotools.webaudio.utils.WebAudioTools.testplay(wav16);
+			audiotools.webaudio.WebAudioTools.testplay(wav16);
 			return;
 		#end
 		#if sys

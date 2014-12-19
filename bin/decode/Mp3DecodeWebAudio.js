@@ -417,7 +417,7 @@ audiotools.Wav16Tools.copyChannel = function(ints) {
 	return result;
 };
 audiotools.Wav16Tools.testplay = function(wav16) {
-	audiotools.webaudio.utils.WebAudioTools.testplay(wav16);
+	audiotools.webaudio.WebAudioTools.testplay(wav16);
 	return;
 };
 audiotools.utils = {};
@@ -474,10 +474,7 @@ audiotools.utils.Mp3Wav16Decoder = function() { };
 audiotools.utils.Mp3Wav16Decoder.__name__ = true;
 audiotools.utils.Mp3Wav16Decoder.decode = function(filename) {
 	var f = new tink.core.FutureTrigger();
-	if(audiotools.utils.Mp3Wav16Decoder.context == null) {
-		js.Lib.alert("No AudioContext!");
-		f.trigger(tink.core.Outcome.Failure({ filename : filename, message : "No AudioContext!"}));
-	}
+	if(audiotools.utils.Mp3Wav16Decoder.context == null) audiotools.utils.Mp3Wav16Decoder.context = audiotools.webaudio.WebAudioTools.getAudioContext();
 	new audiotools.webaudio.Mp3ToBuffer(filename,audiotools.utils.Mp3Wav16Decoder.context).setLoadedHandler(function(buffer,filename1) {
 		var wavBytes = null;
 		var left = buffer.getChannelData(0);
@@ -601,6 +598,75 @@ audiotools.webaudio.Mp3ToBuffer.prototype = {
 	}
 	,__class__: audiotools.webaudio.Mp3ToBuffer
 };
+audiotools.webaudio.WebAudioTools = function() { };
+audiotools.webaudio.WebAudioTools.__name__ = true;
+audiotools.webaudio.WebAudioTools.createBufferFromWav16 = function(wav16,context,samplerate) {
+	if(samplerate == null) samplerate = 44100;
+	var stereo = wav16.stereo;
+	var length = wav16.ch1.length;
+	var left = new Float32Array(length);
+	var pos = 0;
+	var _g = 0;
+	var _g1 = wav16.ch1;
+	while(_g < _g1.length) {
+		var $int = _g1[_g];
+		++_g;
+		left[pos] = $int / 32767;
+		pos++;
+	}
+	var right = null;
+	if(stereo) {
+		right = new Float32Array(length);
+		var pos1 = 0;
+		var _g2 = 0;
+		var _g11 = wav16.ch2;
+		while(_g2 < _g11.length) {
+			var int1 = _g11[_g2];
+			++_g2;
+			right[pos1] = int1 / 32767;
+			pos1++;
+		}
+	}
+	var newbuffer = null;
+	if(stereo) {
+		newbuffer = context.createBuffer(2,left.length,samplerate);
+		newbuffer.getChannelData(0).set(left);
+		newbuffer.getChannelData(1).set(right);
+	} else {
+		newbuffer = context.createBuffer(1,left.length,samplerate);
+		newbuffer.getChannelData(0).set(left);
+	}
+	return newbuffer;
+};
+audiotools.webaudio.WebAudioTools.testplay = function(w,context) {
+	if(context == null) context = audiotools.webaudio.WebAudioTools.getAudioContext();
+	var source = context.createBufferSource();
+	source.buffer = audiotools.webaudio.WebAudioTools.createBufferFromWav16(w,context,48000);
+	source.connect(context.destination,0,0);
+	source.start(0);
+};
+audiotools.webaudio.WebAudioTools.getAudioContext = function() {
+	if(audiotools.webaudio.WebAudioTools._context == null) audiotools.webaudio.WebAudioTools._context = audiotools.webaudio.WebAudioTools.createAudioContext();
+	return audiotools.webaudio.WebAudioTools._context;
+};
+audiotools.webaudio.WebAudioTools.createAudioContext = function() {
+	var context = null;
+	
+			if (typeof AudioContext == "function") {
+				context = new AudioContext();
+				console.log("USING STANDARD WEB AUDIO API");
+				//alert("Standard Web Audio Api");
+			} else if ((typeof webkitAudioContext == "function") || (typeof webkitAudioContext == "object")) {
+				context = new webkitAudioContext();
+				console.log("USING WEBKIT AUDIO API");
+				//alert("Using Webkit Web Audio Api");
+			} else {
+				alert("AudioContext is not supported.");
+				throw new Error("AudioContext is not supported. :(");
+			}
+		;
+	return context;
+};
 audiotools.webaudio.utils = {};
 audiotools.webaudio.utils.Wav16Canvas = function() { };
 audiotools.webaudio.utils.Wav16Canvas.__name__ = true;
@@ -682,81 +748,11 @@ audiotools.webaudio.utils.Wav16Canvas.drawWave = function(canvas,wav16,width,hei
 		}
 	}
 };
-audiotools.webaudio.utils.WebAudioTools = function() { };
-audiotools.webaudio.utils.WebAudioTools.__name__ = true;
-audiotools.webaudio.utils.WebAudioTools.createBufferFromWav16 = function(wav16,context,samplerate) {
-	if(samplerate == null) samplerate = 44100;
-	var stereo = wav16.stereo;
-	var length = wav16.ch1.length;
-	var left = new Float32Array(length);
-	var pos = 0;
-	var _g = 0;
-	var _g1 = wav16.ch1;
-	while(_g < _g1.length) {
-		var $int = _g1[_g];
-		++_g;
-		left[pos] = $int / 32767;
-		pos++;
-	}
-	var right = null;
-	if(stereo) {
-		right = new Float32Array(length);
-		var pos1 = 0;
-		var _g2 = 0;
-		var _g11 = wav16.ch2;
-		while(_g2 < _g11.length) {
-			var int1 = _g11[_g2];
-			++_g2;
-			right[pos1] = int1 / 32767;
-			pos1++;
-		}
-	}
-	var newbuffer = null;
-	if(stereo) {
-		newbuffer = context.createBuffer(2,left.length,samplerate);
-		newbuffer.getChannelData(0).set(left);
-		newbuffer.getChannelData(1).set(right);
-	} else {
-		newbuffer = context.createBuffer(1,left.length,samplerate);
-		newbuffer.getChannelData(0).set(left);
-	}
-	return newbuffer;
-};
-audiotools.webaudio.utils.WebAudioTools.testplay = function(w,context) {
-	if(context == null) context = audiotools.webaudio.utils.WebAudioTools.getAudioContext();
-	var source = context.createBufferSource();
-	source.buffer = audiotools.webaudio.utils.WebAudioTools.createBufferFromWav16(w,context,48000);
-	source.connect(context.destination,0,0);
-	source.start(0);
-};
-audiotools.webaudio.utils.WebAudioTools.getAudioContext = function() {
-	if(audiotools.webaudio.utils.WebAudioTools._context == null) audiotools.webaudio.utils.WebAudioTools._context = audiotools.webaudio.utils.WebAudioTools.createAudioContext();
-	return audiotools.webaudio.utils.WebAudioTools._context;
-};
-audiotools.webaudio.utils.WebAudioTools.createAudioContext = function() {
-	var context = null;
-	
-			if (typeof AudioContext == "function") {
-				context = new AudioContext();
-				console.log("USING STANDARD WEB AUDIO API");
-				//alert("Standard Web Audio Api");
-			} else if ((typeof webkitAudioContext == "function") || (typeof webkitAudioContext == "object")) {
-				context = new webkitAudioContext();
-				console.log("USING WEBKIT AUDIO API");
-				//alert("Using Webkit Web Audio Api");
-			} else {
-				alert("AudioContext is not supported.");
-				throw new Error("AudioContext is not supported. :(");
-			}
-		;
-	return context;
-};
 var examples = {};
 examples.decode = {};
 examples.decode.Main = function() { };
 examples.decode.Main.__name__ = true;
 examples.decode.Main.main = function() {
-	audiotools.utils.Mp3Wav16Decoders.setContext(audiotools.webaudio.utils.WebAudioTools.getAudioContext());
 	var this1 = audiotools.utils.Mp3Wav16Decoders.decodeAllMap(["sample.mp3","leadvox.mp3"]);
 	this1(function(decodedFilesMap) {
 		var i = 0;
@@ -812,16 +808,18 @@ format.wav.Reader.prototype = {
 		if(this.i.readString(4) != "RIFF") throw "RIFF header expected";
 		var len = this.i.readInt32();
 		if(this.i.readString(4) != "WAVE") throw "WAVE signature not found";
-		if(this.i.readString(4) != "fmt ") throw "expected fmt subchunk";
+		var x = this.i.readString(4);
+		if(x != "fmt ") throw "expected fmt subchunk";
 		var fmtlen = this.i.readInt32();
+		var x1 = this.i.readUInt16();
 		var format1;
-		var _g = this.i.readUInt16();
-		switch(_g) {
+		switch(x1) {
 		case 1:
 			format1 = format.wav.WAVEFormat.WF_PCM;
 			break;
 		default:
-			throw "only PCM (uncompressed) WAV files are supported";
+			console.log("only PCM (uncompressed) WAV files are supported");
+			format1 = format.wav.WAVEFormat.WF_PCM;
 		}
 		var channels = this.i.readUInt16();
 		var samplingRate = this.i.readInt32();

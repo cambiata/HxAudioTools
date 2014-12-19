@@ -1,6 +1,5 @@
 package examples.decode;
 
-import audiotools.utils.Mp3Decoder;
 import audiotools.utils.Mp3Wav16Decoder;
 import audiotools.Wav16;
 import audiotools.Wav16Tools;
@@ -18,9 +17,11 @@ class Main
 {
 	static function main() 
 	{
+		/*
 		#if js
-		Mp3Wav16Decoders.setContext(audiotools.webaudio.utils.WebAudioTools.getAudioContext());
+		Mp3Wav16Decoders.setContext(audiotools.webaudio.WebAudioTools.getAudioContext());
 		#end
+		*/
 		
 		Mp3Wav16Decoders.decodeAllMap(['sample.mp3', 'leadvox.mp3']).handle(function(decodedFilesMap) {
 				var i = 0;

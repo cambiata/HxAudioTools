@@ -3,6 +3,7 @@ package audiotools.utils;
 
 
 import audiotools.Wav16;
+
 import haxe.ds.Vector;
 import haxe.io.Bytes;
 import tink.core.Future;
@@ -19,8 +20,8 @@ import audiotools.webaudio.Mp3ToBuffer;
 import js.html.audio.AudioBuffer;
 import js.html.Float32Array;
 import js.html.audio.AudioContext;
+import audiotools.webaudio.WebAudioTools;
 #end
-
 #if (flash)
 import audiotools.openfl.utils.WaveEncoder;
 import audiotools.openfl.utils.ByteArrayTools;
@@ -129,50 +130,50 @@ class Mp3Wav16Decoder
 			return this;
 		}	
 		*/
-		public static var context:AudioContext;
+		static public var context:AudioContext;
 		
 	static public function decode(filename:String ) :Surprise<Wav16File, Wav16Error> {
 			
-			var f = Future.trigger();
+		var f = Future.trigger();
+		
+		if (context == null) {			
+			//Lib.alert('AudioContext not set');						
+			//f.trigger(Failure( { filename:filename, message:'No AudioContext!'})); 	
+			context = WebAudioTools.getAudioContext();
+		}
+		new Mp3ToBuffer(filename, context).setLoadedHandler(function(buffer:AudioBuffer, filename:String) {
 			
-			if (context == null) {
-				Lib.alert('No AudioContext!');			
-				f.trigger(Failure( { filename:filename, message:'No AudioContext!'})); 	
+			var wavBytes:Bytes = null;
+				
+			var left:Float32Array = buffer.getChannelData(0);
+			var leftInts = new Vector<Int>(left.length);				
+			var pos = 0;
+			for (n in left) {
+				leftInts.set(pos, Std.int(n * 32767));
+				pos++;
 			}
-			new Mp3ToBuffer(filename, context).setLoadedHandler(function(buffer:AudioBuffer, filename:String) {
-				
-				
-				var wavBytes:Bytes = null;
-					
-				var left:Float32Array = buffer.getChannelData(0);
-				var leftInts = new Vector<Int>(left.length);				
+			
+			var w16:Wav16 = null;
+			
+			if (buffer.numberOfChannels > 1) {
+				var right:Float32Array = buffer.getChannelData(1);
+				var rightInts = new Vector<Int>(right.length);
 				var pos = 0;
-				for (n in left) {
-					leftInts.set(pos, Std.int(n * 32767));
+				for (n in right) {
+					rightInts.set(pos, Std.int(n * 32767));
 					pos++;
 				}
-				
-				var w16:Wav16 = null;
-				
-				if (buffer.numberOfChannels > 1) {
-					var right:Float32Array = buffer.getChannelData(1);
-					var rightInts = new Vector<Int>(right.length);
-					var pos = 0;
-					for (n in right) {
-						rightInts.set(pos, Std.int(n * 32767));
-						pos++;
-					}
-					w16 = new Wav16(leftInts, rightInts);
-				} else {
-					w16 = new Wav16(leftInts);
-				}				
+				w16 = new Wav16(leftInts, rightInts);
+			} else {
+				w16 = new Wav16(leftInts);
+			}				
 
-				f.trigger(Success( { filename:filename, w16: w16}));						
-				
-			}).load();		
+			f.trigger(Success( { filename:filename, w16: w16}));						
 			
-			return f.asFuture();
-		}
+		}).load();		
+		
+		return f.asFuture();
+	}
 	#end
 	/*
 	dynamic public function converted(wav16:Wav16, mp3Filename:String) {

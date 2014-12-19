@@ -1,7 +1,5 @@
 package audiotools.utils;
 
-
-
 import haxe.ds.Vector;
 import haxe.io.Bytes;
 import tink.core.Future;
@@ -51,51 +49,26 @@ import flash.utils.ByteArray;
  
 class Mp3Decoder 
 {
-	/*
-	var mp3filename:String;
-
-	public function new(mp3Filename:String) 
-	{
-		this.mp3filename = mp3Filename;
-	}
-	
-	public function execute() {
-		this.getWavFile();
-		return this;
-	}	
-	*/
-	
 	#if (sys)	
-	public function getWavFile(filename:String, tempPath:String = ''):Surprise<DecodedMp3, DecodedError> {
+	public function decode(filename:String, tempPath:String = ''):Surprise<DecodedMp3, DecodedError> {
 		
 		var f = Future.trigger();
 		
 		if (FileSystem.exists(filename)) {
 			var tempFilename = (tempPath != '') ? '$tempPath/temp.wav' : 'temp.wav';
-			var command = Sys.command('sox', [this.mp3filename, tempFilename]);
-			var wavBytes = File.getBytes(tempFilename);
+			var command = Sys.command('sox', [filename, tempFilename]);
+			var bytes = File.getBytes(tempFilename);
 			FileSystem.deleteFile(tempFilename);
 			f.trigger(Success( { filename:filename, bytes: bytes}));
 		} else {			
 			f.trigger(Failure( { filename:filename, message: 'Can\'t find $filename'})); 				
 		}
-		
-		/*
-		var tempFilename = (tempPath != '') ? '$tempPath/temp.wav' : 'temp.wav';
-		var command = Sys.command('sox', [this.mp3filename, tempFilename]);
-		var wavBytes = File.getBytes(tempFilename);
-		this.converted(wavBytes, this.mp3filename);
-		FileSystem.deleteFile(tempFilename);
-		return wavBytes;
-		*/
 		return f.asFuture();
 	}
 	#end
 
 	#if (flash) 
-	
-		public function getWavFile(filename:String):Surprise<DecodedMp3, DecodedError> {
-			
+		public function decode(filename:String):Surprise<DecodedMp3, DecodedError> {			
 			var f = Future.trigger();
 			
 			var loader = new URLLoader(new URLRequest(filename));
@@ -124,10 +97,9 @@ class Mp3Decoder
 	#end	
 	
 	#if (js)
-	
 		static var context:AudioContext;
 		public static function setContext(context:AudioContext) Mp3Wav16Decoder.context = context;
-		public function getWavFile(filename:String):Surprise<DecodedMp3, DecodedError> {
+		public function decode(filename:String):Surprise<DecodedMp3, DecodedError> {
 			
 			var f = Future.trigger();
 			
@@ -165,24 +137,7 @@ class Mp3Decoder
 			}).load();		
 		
 			return f.asFuture();
-		}
-		
+		}		
 	#end
-	
-	/*
-	dynamic public function converted(bytes:Bytes, mp3Filename:String) {
-		trace(bytes.length);
-		trace(mp3filename);
-	}
-	
-	public function setConvertedHandler(callbck: Bytes->String->Void) {
-		this.converted = callbck;
-		return this;		
-	}
-	*/
-	
-
-	
-	
 	
 }
