@@ -2,11 +2,13 @@ package examples.decode;
 
 import audiotools.utils.Mp3Decoder;
 import audiotools.utils.Mp3Wav16Decoder;
-import tink.core.Outcome;
-//import audiotools.utils.Mp3Wav16Decoders;
 import audiotools.Wav16;
 import audiotools.Wav16Tools;
+
 using audiotools.Wav16DSP;
+
+using Lambda;
+
 /**
  * ...
  * @author Jonas Nyström
@@ -19,33 +21,22 @@ class Main
 		#if js
 		Mp3Wav16Decoders.setContext(audiotools.webaudio.utils.WebAudioTools.getAudioContext());
 		#end
-		var decoder = Mp3Wav16Decoder.decode('sample.mp3');
-		decoder.handle(function(data) trace('decoded...'));
 		
-		Mp3Wav16Decoders.decodeAll(['sample.mp3', 'leadvox.mp3']).handle(function (items) {
-			for (item in items) switch item {
-				case Outcome.Success(wav16file):trace(wav16file.filename);
-				case Outcome.Failure(wav16error): trace(wav16error.message);
-			}
+		Mp3Wav16Decoders.decodeAllMap(['sample.mp3', 'leadvox.mp3']).handle(function(decodedFilesMap) {
+				var i = 0;
+				for (filename in decodedFilesMap.keys()) {				
+					var wav16 = decodedFilesMap.get(filename);				
+					displayWave(wav16, i, filename);			
+					i++;
+				}							
+				var w0 = decodedFilesMap.get('sample.mp3'); 
+				var w1 = decodedFilesMap.get('leadvox.mp3'); 	
+				
+				var wMixedReverse = new Wav16(w0.ch1.dspMix(w1.ch1).dspReverse(),  w0.ch2.dspMix(w1.ch1).dspReverse());			
+				displayWave(wMixedReverse, 2, 'decoded PCM data, mixed and reversed');					
+				Wav16Tools.testplay(wMixedReverse);
 		});
-		/*
-		var decoders = new Mp3Wav16Decoders(['sample.mp3', 'leadvox.mp3']);		
-		decoders.allDecoded = function(decodedFiles:Map<String, Wav16>) {
-			var i = 0;
-			for (filename in decodedFiles.keys()) {				
-				var wav16 = decodedFiles.get(filename);				
-				displayWave(wav16, i, filename);			
-				i++;
-			}							
-			var w0 = decodedFiles.get('sample.mp3'); 
-			var w1 = decodedFiles.get('leadvox.mp3'); 	
-			
-			var wMixedReverse = new Wav16(w0.ch1.dspMix(w1.ch1).dspReverse(),  w0.ch2.dspMix(w1.ch1).dspReverse());			
-			displayWave(wMixedReverse, 2, 'decoded PCM data, mixed and reversed');					
-			Wav16Tools.testplay(wMixedReverse);
-		}		
-		decoders.decodeAll();				
-		*/
+		
 	}
 	
 	static function displayWave(wav16:Wav16, index:Int, text:String) {

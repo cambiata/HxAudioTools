@@ -48,10 +48,11 @@ class BytesLoader
 	static public function load(filename:String): Surprise<LoadedBytes, LoadError>
 	{
 		var f = Future.trigger();
-		if (FileSystem.exists(filename))
-			var bytes = File.getBytes(filename);
-			f.trigger(Success( {filename:filename, bytes: bytes)))
-		else
+		if (sys.FileSystem.exists(filename))
+		{
+			var bytes = sys.io.File.getBytes(filename);
+			f.trigger(Success( { filename:filename, bytes: bytes } ));
+		} else
 			f.trigger(Failure( { filename:filename, message: 'Can\'t find $filename'})); 		
 			
 		return f.asFuture();

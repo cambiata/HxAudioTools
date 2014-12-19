@@ -70,7 +70,7 @@ class Mp3Wav16Decoder
 			
 			if (FileSystem.exists(filename)) {
 				var tempFilename = (tempPath != '') ? '$tempPath/temp.wav' : 'temp.wav';
-				var command = Sys.command('sox', [this.mp3filename, tempFilename]);
+				var command = Sys.command('sox', [filename, tempFilename]);
 				var w16 = Wav16.fromFile(tempFilename);
 				FileSystem.deleteFile(tempFilename);			
 				f.trigger(Success( { filename:filename, w16: w16}));

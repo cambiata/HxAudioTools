@@ -757,27 +757,21 @@ examples.decode.Main = function() { };
 examples.decode.Main.__name__ = true;
 examples.decode.Main.main = function() {
 	audiotools.utils.Mp3Wav16Decoders.setContext(audiotools.webaudio.utils.WebAudioTools.getAudioContext());
-	var decoder = audiotools.utils.Mp3Wav16Decoder.decode("sample.mp3");
-	decoder(function(data) {
-		console.log("decoded...");
-	});
-	var this1 = audiotools.utils.Mp3Wav16Decoders.decodeAll(["sample.mp3","leadvox.mp3"]);
-	this1(function(items) {
-		var _g = 0;
-		while(_g < items.length) {
-			var item = items[_g];
-			++_g;
-			switch(item[1]) {
-			case 0:
-				var wav16file = item[2];
-				console.log(wav16file.filename);
-				break;
-			case 1:
-				var wav16error = item[2];
-				console.log(wav16error.message);
-				break;
-			}
+	var this1 = audiotools.utils.Mp3Wav16Decoders.decodeAllMap(["sample.mp3","leadvox.mp3"]);
+	this1(function(decodedFilesMap) {
+		var i = 0;
+		var $it0 = decodedFilesMap.keys();
+		while( $it0.hasNext() ) {
+			var filename = $it0.next();
+			var wav16 = decodedFilesMap.get(filename);
+			examples.decode.Main.displayWave(wav16,i,filename);
+			i++;
 		}
+		var w0 = decodedFilesMap.get("sample.mp3");
+		var w1 = decodedFilesMap.get("leadvox.mp3");
+		var wMixedReverse = new audiotools.Wav16(audiotools.Wav16DSP.dspReverse(audiotools.Wav16DSP.dspMix(w0.ch1,w1.ch1)),audiotools.Wav16DSP.dspReverse(audiotools.Wav16DSP.dspMix(w0.ch2,w1.ch1)));
+		examples.decode.Main.displayWave(wMixedReverse,2,"decoded PCM data, mixed and reversed");
+		audiotools.Wav16Tools.testplay(wMixedReverse);
 	});
 };
 examples.decode.Main.displayWave = function(wav16,index,text) {
@@ -890,6 +884,16 @@ haxe.ds.StringMap.__interfaces__ = [IMap];
 haxe.ds.StringMap.prototype = {
 	set: function(key,value) {
 		this.h["$" + key] = value;
+	}
+	,get: function(key) {
+		return this.h["$" + key];
+	}
+	,keys: function() {
+		var a = [];
+		for( var key in this.h ) {
+		if(this.h.hasOwnProperty(key)) a.push(key.substr(1));
+		}
+		return HxOverrides.iter(a);
 	}
 	,__class__: haxe.ds.StringMap
 };

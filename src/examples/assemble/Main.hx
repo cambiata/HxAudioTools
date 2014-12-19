@@ -1,7 +1,7 @@
 package examples.assemble;
 
 import audiotools.utils.BytesLoader;
-import audiotools.utils.Mp3Wav16Decoders;
+import audiotools.utils.Mp3Wav16Decoder;
 import audiotools.Wav16;
 import audiotools.Wav16DSP;
 import audiotools.Wav16Tools;
@@ -27,8 +27,7 @@ class Main
 		var mp3start = 49;
 		var mp3end = 60;		
 		var files = [for (i in mp3start...mp3end) i].map(function(i) return 'piano/$i.mp3');
-		var decoders = new Mp3Wav16Decoders(files);
-		decoders.allDecoded = function(data) {
+		var decoders = Mp3Wav16Decoders.decodeAllMap(files).handle(function(data) {
 			trace('all decoded');			
 			var w49:Wav16  = data.get('piano/49.mp3');						
 			var w50:Wav16  = data.get('piano/50.mp3');						
@@ -39,7 +38,7 @@ class Main
 			Wav16DSP.wspMixInto(w, w50, Wav16Tools.toSamples(2));
 			displayWave(w, 0);
 			Wav16Tools.testplay(w);						
-		};
+		});
 		//decoders.decodeAll();
 		
 		/*
