@@ -67,7 +67,7 @@ class Mp3Wav16Decoder
 	#if (sys)	
 	static public function decode(filename:String, tempPath:String = ''):Surprise<Wav16File, Wav16Error> {
 			var f = Future.trigger();
-			
+			//var filename = Sys.getCwd() + filename;
 			if (FileSystem.exists(filename)) {
 				var tempFilename = (tempPath != '') ? '$tempPath/temp.wav' : 'temp.wav';
 				var command = Sys.command('sox', [filename, tempFilename]);

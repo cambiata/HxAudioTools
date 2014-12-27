@@ -73,7 +73,9 @@ class Wav16
 	public function saveFile(filename:String) {		
 		var header = Wav16Tools.createHeader(this.stereo);
 		var data = (this.stereo) ? Wav16Tools.intsToStero16Bytes(this.ch1, this.ch2) : Wav16Tools.intsToMono16Bytes(this.ch1);				
-		new Writer(File.write(filename, true)).write({ header: header, data: data });		
+		try {
+		new Writer(File.write(filename, true)).write( { header: header, data: data } );		
+		} catch (e:Dynamic) throw 'Could not write file $filename';
 	}	
 	#end
 	
