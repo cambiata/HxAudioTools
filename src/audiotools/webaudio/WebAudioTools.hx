@@ -1,4 +1,4 @@
-package audiotools.webaudio.utils;
+package audiotools.webaudio;
 import audiotools.Wav16;
 
 import js.html.audio.AudioBuffer;

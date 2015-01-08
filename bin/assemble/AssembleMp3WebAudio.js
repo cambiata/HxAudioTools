@@ -417,7 +417,7 @@ audiotools.Wav16Tools.copyChannel = function(ints) {
 	return result;
 };
 audiotools.Wav16Tools.testplay = function(wav16) {
-	audiotools.webaudio.utils.WebAudioTools.testplay(wav16);
+	audiotools.webaudio.WebAudioTools.testplay(wav16);
 	return;
 };
 audiotools.utils = {};
@@ -487,111 +487,87 @@ audiotools.utils.BytesLoaders.loadAllMap = function(filenames) {
 	});
 	return f.future;
 };
-audiotools.utils.Mp3Wav16Decoder = function(mp3Filename) {
-	this.mp3filename = mp3Filename;
-};
+audiotools.utils.Mp3Wav16Decoder = function() { };
 audiotools.utils.Mp3Wav16Decoder.__name__ = true;
-audiotools.utils.Mp3Wav16Decoder.prototype = {
-	decode: function() {
-		this.getWavFile();
-		return this;
-	}
-	,setContext: function(context) {
-		this.context = context;
-		return this;
-	}
-	,getWavFile: function() {
-		var _g = this;
-		if(this.context == null) {
-			js.Lib.alert("No AudioContext!");
-			throw "No AudioContext";
-		}
-		new audiotools.webaudio.Mp3ToBuffer(this.mp3filename,this.context).setLoadedHandler(function(buffer,filename) {
-			_g.buffer = buffer;
-			var wavBytes = null;
-			var left = buffer.getChannelData(0);
-			var leftInts;
-			var this1;
-			this1 = new Array(left.length);
-			leftInts = this1;
-			var pos = 0;
-			var _g1 = 0;
-			while(_g1 < left.length) {
-				var n = left[_g1];
-				++_g1;
-				leftInts[pos] = n * 32767 | 0;
-				pos++;
-			}
-			var w16 = null;
-			if(buffer.numberOfChannels > 1) {
-				var right = buffer.getChannelData(1);
-				var rightInts;
-				var this2;
-				this2 = new Array(right.length);
-				rightInts = this2;
-				var pos1 = 0;
-				var _g11 = 0;
-				while(_g11 < right.length) {
-					var n1 = right[_g11];
-					++_g11;
-					rightInts[pos1] = n1 * 32767 | 0;
-					pos1++;
-				}
-				w16 = new audiotools.Wav16(leftInts,rightInts);
-			} else w16 = new audiotools.Wav16(leftInts);
-			_g.converted(w16,_g.mp3filename);
-		}).load();
-	}
-	,converted: function(wav16,mp3Filename) {
-		console.log(wav16.ch1.length);
-		console.log(this.mp3filename);
-	}
-	,setDecodedHandler: function(callbck) {
-		this.converted = callbck;
-		return this;
-	}
-	,__class__: audiotools.utils.Mp3Wav16Decoder
-};
-audiotools.utils.Mp3Wav16Decoders = function(mp3files) {
-	this.decoders = mp3files.map(function(file) {
-		return new audiotools.utils.Mp3Wav16Decoder(file);
-	});
-	if(audiotools.utils.Mp3Wav16Decoders.context == null) audiotools.utils.Mp3Wav16Decoders.context = audiotools.webaudio.utils.WebAudioTools.getAudioContext();
-	Lambda.iter(this.decoders,function(decoder) {
-		decoder.setContext(audiotools.utils.Mp3Wav16Decoders.context);
-	});
-	var _g = 0;
-	var _g1 = this.decoders;
-	while(_g < _g1.length) {
-		var loader = _g1[_g];
-		++_g;
-		loader.converted = $bind(this,this.onDecoded);
-	}
-};
-audiotools.utils.Mp3Wav16Decoders.__name__ = true;
-audiotools.utils.Mp3Wav16Decoders.prototype = {
-	onDecoded: function(wav16,mp3Filename) {
-		this.decodedFiles.set(mp3Filename,wav16);
-		console.log("decoded " + mp3Filename);
-		this.decodedCount++;
-		if(this.decodedCount >= this.decoders.length) this.allDecoded(this.decodedFiles);
-	}
-	,allDecoded: function(convertedFiles) {
-		console.log("ALL DECODED");
-	}
-	,decodeAll: function() {
-		this.decodedCount = 0;
-		this.decodedFiles = new haxe.ds.StringMap();
+audiotools.utils.Mp3Wav16Decoder.decode = function(filename) {
+	var f = new tink.core.FutureTrigger();
+	if(audiotools.utils.Mp3Wav16Decoder.context == null) audiotools.utils.Mp3Wav16Decoder.context = audiotools.webaudio.WebAudioTools.getAudioContext();
+	new audiotools.webaudio.Mp3ToBuffer(filename,audiotools.utils.Mp3Wav16Decoder.context).setLoadedHandler(function(buffer,filename1) {
+		var wavBytes = null;
+		var left = buffer.getChannelData(0);
+		var leftInts;
+		var this1;
+		this1 = new Array(left.length);
+		leftInts = this1;
+		var pos = 0;
 		var _g = 0;
-		var _g1 = this.decoders;
-		while(_g < _g1.length) {
-			var decoder = _g1[_g];
+		while(_g < left.length) {
+			var n = left[_g];
 			++_g;
-			decoder.decode();
+			leftInts[pos] = n * 32767 | 0;
+			pos++;
 		}
-		return this;
-	}
-	,__class__: audiotools.utils.Mp3Wav16Decoders
+		var w16 = null;
+		if(buffer.numberOfChannels > 1) {
+			var right = buffer.getChannelData(1);
+			var rightInts;
+			var this2;
+			this2 = new Array(right.length);
+			rightInts = this2;
+			var pos1 = 0;
+			var _g1 = 0;
+			while(_g1 < right.length) {
+				var n1 = right[_g1];
+				++_g1;
+				rightInts[pos1] = n1 * 32767 | 0;
+				pos1++;
+			}
+			w16 = new audiotools.Wav16(leftInts,rightInts);
+		} else w16 = new audiotools.Wav16(leftInts);
+		f.trigger(tink.core.Outcome.Success({ filename : filename1, w16 : w16}));
+	}).load();
+	return f.future;
+};
+audiotools.utils.Mp3Wav16Decoders = function() { };
+audiotools.utils.Mp3Wav16Decoders.__name__ = true;
+audiotools.utils.Mp3Wav16Decoders.setContext = function(context) {
+	audiotools.utils.Mp3Wav16Decoder.context = context;
+};
+audiotools.utils.Mp3Wav16Decoders.decodeAll = function(filenames) {
+	return tink.core._Future.Future_Impl_.fromMany((function($this) {
+		var $r;
+		var _g = [];
+		{
+			var _g1 = 0;
+			while(_g1 < filenames.length) {
+				var filename = filenames[_g1];
+				++_g1;
+				_g.push(audiotools.utils.Mp3Wav16Decoder.decode(filename));
+			}
+		}
+		$r = _g;
+		return $r;
+	}(this)));
+};
+audiotools.utils.Mp3Wav16Decoders.decodeAllMap = function(filenames) {
+	var f = new tink.core.FutureTrigger();
+	var result = new haxe.ds.StringMap();
+	var this1 = audiotools.utils.Mp3Wav16Decoders.decodeAll(filenames);
+	this1(function(items) {
+		Lambda.iter(items,function(item) {
+			switch(item[1]) {
+			case 0:
+				var wav16file = item[2];
+				result.set(wav16file.filename,wav16file.w16);
+				break;
+			case 1:
+				var wav16Error = item[2];
+				break;
+			}
+		});
+		f.trigger(result);
+	});
+	return f.future;
 };
 audiotools.webaudio = {};
 audiotools.webaudio.Mp3ToBuffer = function(url,context) {
@@ -638,6 +614,75 @@ audiotools.webaudio.Mp3ToBuffer.prototype = {
 		return this;
 	}
 	,__class__: audiotools.webaudio.Mp3ToBuffer
+};
+audiotools.webaudio.WebAudioTools = function() { };
+audiotools.webaudio.WebAudioTools.__name__ = true;
+audiotools.webaudio.WebAudioTools.createBufferFromWav16 = function(wav16,context,samplerate) {
+	if(samplerate == null) samplerate = 44100;
+	var stereo = wav16.stereo;
+	var length = wav16.ch1.length;
+	var left = new Float32Array(length);
+	var pos = 0;
+	var _g = 0;
+	var _g1 = wav16.ch1;
+	while(_g < _g1.length) {
+		var $int = _g1[_g];
+		++_g;
+		left[pos] = $int / 32767;
+		pos++;
+	}
+	var right = null;
+	if(stereo) {
+		right = new Float32Array(length);
+		var pos1 = 0;
+		var _g2 = 0;
+		var _g11 = wav16.ch2;
+		while(_g2 < _g11.length) {
+			var int1 = _g11[_g2];
+			++_g2;
+			right[pos1] = int1 / 32767;
+			pos1++;
+		}
+	}
+	var newbuffer = null;
+	if(stereo) {
+		newbuffer = context.createBuffer(2,left.length,samplerate);
+		newbuffer.getChannelData(0).set(left);
+		newbuffer.getChannelData(1).set(right);
+	} else {
+		newbuffer = context.createBuffer(1,left.length,samplerate);
+		newbuffer.getChannelData(0).set(left);
+	}
+	return newbuffer;
+};
+audiotools.webaudio.WebAudioTools.testplay = function(w,context) {
+	if(context == null) context = audiotools.webaudio.WebAudioTools.getAudioContext();
+	var source = context.createBufferSource();
+	source.buffer = audiotools.webaudio.WebAudioTools.createBufferFromWav16(w,context,48000);
+	source.connect(context.destination,0,0);
+	source.start(0);
+};
+audiotools.webaudio.WebAudioTools.getAudioContext = function() {
+	if(audiotools.webaudio.WebAudioTools._context == null) audiotools.webaudio.WebAudioTools._context = audiotools.webaudio.WebAudioTools.createAudioContext();
+	return audiotools.webaudio.WebAudioTools._context;
+};
+audiotools.webaudio.WebAudioTools.createAudioContext = function() {
+	var context = null;
+	
+			if (typeof AudioContext == "function") {
+				context = new AudioContext();
+				console.log("USING STANDARD WEB AUDIO API");
+				//alert("Standard Web Audio Api");
+			} else if ((typeof webkitAudioContext == "function") || (typeof webkitAudioContext == "object")) {
+				context = new webkitAudioContext();
+				console.log("USING WEBKIT AUDIO API");
+				//alert("Using Webkit Web Audio Api");
+			} else {
+				alert("AudioContext is not supported.");
+				throw new Error("AudioContext is not supported. :(");
+			}
+		;
+	return context;
 };
 audiotools.webaudio.utils = {};
 audiotools.webaudio.utils.Wav16Canvas = function() { };
@@ -720,75 +765,6 @@ audiotools.webaudio.utils.Wav16Canvas.drawWave = function(canvas,wav16,width,hei
 		}
 	}
 };
-audiotools.webaudio.utils.WebAudioTools = function() { };
-audiotools.webaudio.utils.WebAudioTools.__name__ = true;
-audiotools.webaudio.utils.WebAudioTools.createBufferFromWav16 = function(wav16,context,samplerate) {
-	if(samplerate == null) samplerate = 44100;
-	var stereo = wav16.stereo;
-	var length = wav16.ch1.length;
-	var left = new Float32Array(length);
-	var pos = 0;
-	var _g = 0;
-	var _g1 = wav16.ch1;
-	while(_g < _g1.length) {
-		var $int = _g1[_g];
-		++_g;
-		left[pos] = $int / 32767;
-		pos++;
-	}
-	var right = null;
-	if(stereo) {
-		right = new Float32Array(length);
-		var pos1 = 0;
-		var _g2 = 0;
-		var _g11 = wav16.ch2;
-		while(_g2 < _g11.length) {
-			var int1 = _g11[_g2];
-			++_g2;
-			right[pos1] = int1 / 32767;
-			pos1++;
-		}
-	}
-	var newbuffer = null;
-	if(stereo) {
-		newbuffer = context.createBuffer(2,left.length,samplerate);
-		newbuffer.getChannelData(0).set(left);
-		newbuffer.getChannelData(1).set(right);
-	} else {
-		newbuffer = context.createBuffer(1,left.length,samplerate);
-		newbuffer.getChannelData(0).set(left);
-	}
-	return newbuffer;
-};
-audiotools.webaudio.utils.WebAudioTools.testplay = function(w,context) {
-	if(context == null) context = audiotools.webaudio.utils.WebAudioTools.getAudioContext();
-	var source = context.createBufferSource();
-	source.buffer = audiotools.webaudio.utils.WebAudioTools.createBufferFromWav16(w,context,48000);
-	source.connect(context.destination,0,0);
-	source.start(0);
-};
-audiotools.webaudio.utils.WebAudioTools.getAudioContext = function() {
-	if(audiotools.webaudio.utils.WebAudioTools._context == null) audiotools.webaudio.utils.WebAudioTools._context = audiotools.webaudio.utils.WebAudioTools.createAudioContext();
-	return audiotools.webaudio.utils.WebAudioTools._context;
-};
-audiotools.webaudio.utils.WebAudioTools.createAudioContext = function() {
-	var context = null;
-	
-			if (typeof AudioContext == "function") {
-				context = new AudioContext();
-				console.log("USING STANDARD WEB AUDIO API");
-				//alert("Standard Web Audio Api");
-			} else if ((typeof webkitAudioContext == "function") || (typeof webkitAudioContext == "object")) {
-				context = new webkitAudioContext();
-				console.log("USING WEBKIT AUDIO API");
-				//alert("Using Webkit Web Audio Api");
-			} else {
-				alert("AudioContext is not supported.");
-				throw new Error("AudioContext is not supported. :(");
-			}
-		;
-	return context;
-};
 var examples = {};
 examples.assemble = {};
 examples.assemble.Main = function() { };
@@ -811,8 +787,8 @@ examples.assemble.Main.main = function() {
 	}(this))).map(function(i1) {
 		return "piano/" + i1 + ".mp3";
 	});
-	var decoders = new audiotools.utils.Mp3Wav16Decoders(files);
-	decoders.allDecoded = function(data) {
+	var this1 = audiotools.utils.Mp3Wav16Decoders.decodeAllMap(files);
+	this1(function(data) {
 		console.log("all decoded");
 		var w49 = data.get("piano/49.mp3");
 		var w50 = data.get("piano/50.mp3");
@@ -823,14 +799,6 @@ examples.assemble.Main.main = function() {
 		audiotools.Wav16DSP.wspMixInto(w,w50,audiotools.Wav16Tools.toSamples(2));
 		examples.assemble.Main.displayWave(w,0);
 		audiotools.Wav16Tools.testplay(w);
-	};
-	var this1 = audiotools.utils.BytesLoaders.loadAllMap(["piano/49.mp3","piano/50x.mp3"]);
-	this1(function(items) {
-		var $it0 = items.keys();
-		while( $it0.hasNext() ) {
-			var filename = $it0.next();
-			console.log(filename);
-		}
 	});
 };
 examples.assemble.Main.displayWave = function(wav16,index,text) {
@@ -949,13 +917,6 @@ haxe.ds.StringMap.prototype = {
 	}
 	,get: function(key) {
 		return this.h["$" + key];
-	}
-	,keys: function() {
-		var a = [];
-		for( var key in this.h ) {
-		if(this.h.hasOwnProperty(key)) a.push(key.substr(1));
-		}
-		return HxOverrides.iter(a);
 	}
 	,__class__: haxe.ds.StringMap
 };
