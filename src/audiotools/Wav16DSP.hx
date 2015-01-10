@@ -49,7 +49,12 @@ class Wav16DSP
 		
 		var length = (w2length > 0) ? Std.int(Math.min(w2.length, w2length)) : w2.length;
 		
-		if (offset + length > w1.length) throw "Wav16DSP Error: dspMixInto - ";		
+		if (w1 == null) throw "Wav16DSP Error: dspMixInto - w1 == null ";
+		if (offset + length > w1.length) {
+			trace([length, offset+length, w1.length]);
+			trace("Wav16DSP Error: dspMixInto - ");		
+			return;
+		}
 		
 		var softenstart = length - soften;
 		
