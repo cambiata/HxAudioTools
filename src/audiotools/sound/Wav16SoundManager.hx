@@ -37,11 +37,11 @@ class Wav16SoundManager  implements Wav16Sound
 		this.key = key;
 		
 		#if js 
-			this.sound = new Wab16Webaudio(wav16, playCallback, key);
+			this.sound = new Wav16SoundJS(wav16, playCallback, key);
 		#end
 		
 		#if flash
-			this.sound = new Wav16Flash(wav16, playCallback, key);
+			this.sound = new Wav16SoundFlash(wav16, playCallback, key);
 		#end		
 	}
 	

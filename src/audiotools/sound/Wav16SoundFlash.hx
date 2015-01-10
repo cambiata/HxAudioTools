@@ -16,7 +16,7 @@ import flash.utils.Timer;
  * Wav16Flash
  * @author Jonas Nyström
  */
-class Wav16Flash extends Wav16SoundBase implements Wav16Sound 
+class Wav16SoundFlash extends Wav16SoundBase implements Wav16Sound 
 {
 	var sound:Sound;
 	var channel:SoundChannel;
