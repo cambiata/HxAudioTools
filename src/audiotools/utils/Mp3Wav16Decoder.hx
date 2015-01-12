@@ -1,15 +1,16 @@
 package audiotools.utils;
 
 
-
+import tink.core.Future;
+import tink.core.Outcome;
 import audiotools.Wav16;
 
 import haxe.ds.Vector;
 import haxe.io.Bytes;
-import tink.core.Future;
-import tink.core.Outcome;
 
-#if (sys)
+
+#if (sys)import tink.core.Future;
+import tink.core.Outcome;
 import sys.FileSystem;
 import sys.io.File;
 #end
