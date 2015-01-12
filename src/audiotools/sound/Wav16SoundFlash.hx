@@ -48,7 +48,7 @@ class Wav16SoundFlash extends Wav16SoundBase implements Wav16Sound
 			var position =  this.channel.position;
 			if (position > this.duration) this.stop();
 			
-			this.playCallback(this.key, position);			
+			this.playCallback(this.key, position / 1000);			
 		}
 	}
 	

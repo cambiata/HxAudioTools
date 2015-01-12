@@ -6,7 +6,6 @@ package audiotools.sound;
  */
 class Wav16SoundManager  implements Wav16Sound
 {
-
   	private static var instance:Wav16SoundManager;
 	var sound:Wav16Sound;
 	var wav16:Wav16;

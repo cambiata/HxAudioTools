@@ -9,7 +9,7 @@ import js.html.audio.AudioContext;
  * Wab16Webaudio
  * @author Jonas Nyström
  */
-class Wab16Webaudio extends Wav16SoundBase implements Wav16Sound 
+class Wav16SoundJS extends Wav16SoundBase implements Wav16Sound 
 {
 	//var playCallback:String->Float->Void;
 	var elapsedTimeSinceStart:Float;
@@ -33,7 +33,7 @@ class Wab16Webaudio extends Wav16SoundBase implements Wav16Sound
 		
 		this.context =  WebAudioTools.getAudioContext();
 		this.buffer = WebAudioTools.createBufferFromWav16(wav16, this.context, 48000);		
-		 audiotools.sound.Wab16Webaudio.animationCallback =this.onAnimate;	 // this.playCallback; /
+		 audiotools.sound.Wav16SoundJS.animationCallback =this.onAnimate;	 // this.playCallback; /
 		
 		 untyped __js__('
 			window.requestAnimFrame = (function() {
@@ -79,13 +79,16 @@ class Wab16Webaudio extends Wav16SoundBase implements Wav16Sound
 			if (this.elapsedTimeSinceStart > this.buffer.duration) this.stop();
 			var delta = this.context.currentTime - this.lastTime;
 			this.elapsedTimeSinceStart += delta;
-			this.playCallback(this.key, this.elapsedTimeSinceStart);
+			
+			this.playCallback(this.key, this.elapsedTimeSinceStart );
+			
+			
 			this.lastTime = this.context.currentTime;			
 		} else {
 			//trace('onAnimate...');	
 		}
 		
-		untyped __js__('requestAnimFrame(  audiotools.sound.Wab16Webaudio.animationCallback);');				
+		untyped __js__('requestAnimFrame(  audiotools.sound.Wav16SoundJS.animationCallback);');				
 	}
 	
 }
