@@ -9,7 +9,7 @@ import js.html.Float32Array;
  * AudioBufferUtils
  * @author Jonas Nyström
  */
-class WebAudioTools 
+class WATools 
 {
 	static public function createBufferFromWav16(wav16:Wav16, context:AudioContext, samplerate:Int=44100):AudioBuffer {
 		
@@ -51,9 +51,9 @@ class WebAudioTools
 	}
 	
 	static public function testplay(w:Wav16, context:AudioContext = null) {
-		if (context == null) context = WebAudioTools.getAudioContext();
+		if (context == null) context = WATools.getAudioContext();
 		var source = context.createBufferSource();		
-		source.buffer = WebAudioTools.createBufferFromWav16(w, context, 48000); // STRANGE! 48000???
+		source.buffer = WATools.createBufferFromWav16(w, context, 48000); // STRANGE! 48000???
 		source.connect(context.destination, 0, 0);				
 		source.start(0);			
 	}

@@ -5,7 +5,7 @@ import audiotools.utils.Mp3Wav16Decoder;
 import audiotools.Wav16;
 import audiotools.Wav16DSP;
 import audiotools.Wav16Tools;
-import audiotools.webaudio.WebAudioTools;
+import audiotools.webaudio.WATools;
 
 using Lambda;
 /**

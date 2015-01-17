@@ -173,7 +173,12 @@ audiotools.Wav16DSP.dspMixInto = function(w1,w2,offset,w2length,w2vol,soften) {
 	if(offset == null) offset = 0;
 	var length;
 	if(w2length > 0) length = Std["int"](Math.min(w2.length,w2length)); else length = w2.length;
-	if(offset + length > w1.length) throw "Wav16DSP Error: dspMixInto - ";
+	if(w1 == null) throw "Wav16DSP Error: dspMixInto - w1 == null ";
+	if(offset + length > w1.length) {
+		console.log([length,offset + length,w1.length]);
+		console.log("Wav16DSP Error: dspMixInto - ");
+		return;
+	}
 	var softenstart = length - soften;
 	var _g = 0;
 	while(_g < length) {
@@ -417,64 +422,15 @@ audiotools.Wav16Tools.copyChannel = function(ints) {
 	return result;
 };
 audiotools.Wav16Tools.testplay = function(wav16) {
-	audiotools.webaudio.WebAudioTools.testplay(wav16);
+	audiotools.webaudio.WATools.testplay(wav16);
 	return;
 };
 audiotools.utils = {};
-audiotools.utils.Mp3Decoder = function() { };
-audiotools.utils.Mp3Decoder.__name__ = true;
-audiotools.utils.Mp3Decoder.setContext = function(context) {
-	audiotools.utils.Mp3Wav16Decoder.context = context;
-};
-audiotools.utils.Mp3Decoder.prototype = {
-	getWavFile: function(filename) {
-		var f = new tink.core.FutureTrigger();
-		if(audiotools.utils.Mp3Decoder.context == null) {
-			js.Lib.alert("No AudioContext!");
-			f.trigger(tink.core.Outcome.Failure({ filename : filename, message : "No AudioContext!"}));
-		}
-		new audiotools.webaudio.Mp3ToBuffer(filename,audiotools.utils.Mp3Decoder.context).setLoadedHandler(function(buffer,filename1) {
-			var bytes = null;
-			var left = buffer.getChannelData(0);
-			var leftInts;
-			var this1;
-			this1 = new Array(left.length);
-			leftInts = this1;
-			var pos = 0;
-			var _g = 0;
-			while(_g < left.length) {
-				var n = left[_g];
-				++_g;
-				leftInts[pos] = n * 32767 | 0;
-				pos++;
-			}
-			if(buffer.numberOfChannels > 1) {
-				var right = buffer.getChannelData(1);
-				var rightInts;
-				var this2;
-				this2 = new Array(right.length);
-				rightInts = this2;
-				var pos1 = 0;
-				var _g1 = 0;
-				while(_g1 < right.length) {
-					var n1 = right[_g1];
-					++_g1;
-					rightInts[pos1] = n1 * 32767 | 0;
-					pos1++;
-				}
-				bytes = audiotools.Wav16Tools.intsToStero16Bytes(leftInts,rightInts);
-			} else bytes = audiotools.Wav16Tools.intsToMono16Bytes(leftInts);
-			f.trigger(tink.core.Outcome.Success({ filename : filename1, bytes : bytes}));
-		}).load();
-		return f.future;
-	}
-	,__class__: audiotools.utils.Mp3Decoder
-};
 audiotools.utils.Mp3Wav16Decoder = function() { };
 audiotools.utils.Mp3Wav16Decoder.__name__ = true;
 audiotools.utils.Mp3Wav16Decoder.decode = function(filename) {
 	var f = new tink.core.FutureTrigger();
-	if(audiotools.utils.Mp3Wav16Decoder.context == null) audiotools.utils.Mp3Wav16Decoder.context = audiotools.webaudio.WebAudioTools.getAudioContext();
+	if(audiotools.utils.Mp3Wav16Decoder.context == null) audiotools.utils.Mp3Wav16Decoder.context = audiotools.webaudio.WATools.getAudioContext();
 	new audiotools.webaudio.Mp3ToBuffer(filename,audiotools.utils.Mp3Wav16Decoder.context).setLoadedHandler(function(buffer,filename1) {
 		var wavBytes = null;
 		var left = buffer.getChannelData(0);
@@ -598,9 +554,9 @@ audiotools.webaudio.Mp3ToBuffer.prototype = {
 	}
 	,__class__: audiotools.webaudio.Mp3ToBuffer
 };
-audiotools.webaudio.WebAudioTools = function() { };
-audiotools.webaudio.WebAudioTools.__name__ = true;
-audiotools.webaudio.WebAudioTools.createBufferFromWav16 = function(wav16,context,samplerate) {
+audiotools.webaudio.WATools = function() { };
+audiotools.webaudio.WATools.__name__ = true;
+audiotools.webaudio.WATools.createBufferFromWav16 = function(wav16,context,samplerate) {
 	if(samplerate == null) samplerate = 44100;
 	var stereo = wav16.stereo;
 	var length = wav16.ch1.length;
@@ -638,18 +594,18 @@ audiotools.webaudio.WebAudioTools.createBufferFromWav16 = function(wav16,context
 	}
 	return newbuffer;
 };
-audiotools.webaudio.WebAudioTools.testplay = function(w,context) {
-	if(context == null) context = audiotools.webaudio.WebAudioTools.getAudioContext();
+audiotools.webaudio.WATools.testplay = function(w,context) {
+	if(context == null) context = audiotools.webaudio.WATools.getAudioContext();
 	var source = context.createBufferSource();
-	source.buffer = audiotools.webaudio.WebAudioTools.createBufferFromWav16(w,context,48000);
+	source.buffer = audiotools.webaudio.WATools.createBufferFromWav16(w,context,48000);
 	source.connect(context.destination,0,0);
 	source.start(0);
 };
-audiotools.webaudio.WebAudioTools.getAudioContext = function() {
-	if(audiotools.webaudio.WebAudioTools._context == null) audiotools.webaudio.WebAudioTools._context = audiotools.webaudio.WebAudioTools.createAudioContext();
-	return audiotools.webaudio.WebAudioTools._context;
+audiotools.webaudio.WATools.getAudioContext = function() {
+	if(audiotools.webaudio.WATools._context == null) audiotools.webaudio.WATools._context = audiotools.webaudio.WATools.createAudioContext();
+	return audiotools.webaudio.WATools._context;
 };
-audiotools.webaudio.WebAudioTools.createAudioContext = function() {
+audiotools.webaudio.WATools.createAudioContext = function() {
 	var context = null;
 	
 			if (typeof AudioContext == "function") {
@@ -1859,7 +1815,7 @@ var Bool = Boolean;
 Bool.__ename__ = ["Bool"];
 var Class = { __name__ : ["Class"]};
 var Enum = { };
-audiotools.Wav16Tools.SAMPLERATE = 44100;
+audiotools.Wav16Tools.SAMPLERATE = 48000;
 tink.core._Callback.Cell.pool = [];
 tink.core._Error.ErrorCode_Impl_.BadRequest = 400;
 tink.core._Error.ErrorCode_Impl_.Unauthorized = 401;
