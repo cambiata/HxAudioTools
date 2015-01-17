@@ -213,5 +213,15 @@ class Wav16PartsBuilder
 		return f.asFuture();
 	}
 	
+	public function removeScoreFromCache(nscore:NScore, tempo:Int = 60, partsSounds:Array<String> = null) {
+		var key = nscore.uuid + ':$tempo:$partsSounds';
+		if (this.scorecache.exists(key)) {
+			this.scorecache.remove(key);
+			trace('remove key $key');
+		} else {
+			trace('can not find key $key to remove');
+		}
+	}
+	
 	
 }

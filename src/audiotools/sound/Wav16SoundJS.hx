@@ -1,6 +1,7 @@
 package audiotools.sound;
 import audiotools.Wav16;
-import audiotools.webaudio.WebAudioTools;
+import audiotools.webaudio.Context;
+import audiotools.webaudio.WATools;
 import js.html.audio.AudioBuffer;
 import js.html.audio.AudioBufferSourceNode;
 import js.html.audio.AudioContext;
@@ -31,8 +32,8 @@ class Wav16SoundJS extends Wav16SoundBase implements Wav16Sound
 		//this.playCallback = playCallback;
 		super(wav16, playCallback, key);
 		
-		this.context =  WebAudioTools.getAudioContext();
-		this.buffer = WebAudioTools.createBufferFromWav16(wav16, this.context, 48000);		
+		this.context =  Context.getInstance().getContext();
+		this.buffer = WATools.createBufferFromWav16(wav16, this.context, 48000);		
 		 audiotools.sound.Wav16SoundJS.animationCallback =this.onAnimate;	 // this.playCallback; /
 		
 		 untyped __js__('

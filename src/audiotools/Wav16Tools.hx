@@ -1,5 +1,6 @@
 package audiotools;
 
+
 import format.wav.Data.WAVEHeader;
 import haxe.ds.Vector;
 import haxe.io.Bytes;
@@ -166,7 +167,7 @@ class Wav16Tools
 			return;
 		#end
 		#if js
-			audiotools.webaudio.WebAudioTools.testplay(wav16);
+			audiotools.webaudio.WATools.testplay(wav16);
 			return;
 		#end
 		#if sys

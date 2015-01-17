@@ -21,7 +21,7 @@ import audiotools.webaudio.Mp3ToBuffer;
 import js.html.audio.AudioBuffer;
 import js.html.Float32Array;
 import js.html.audio.AudioContext;
-import audiotools.webaudio.WebAudioTools;
+import audiotools.webaudio.WATools;
 #end
 #if (flash)
 import audiotools.openfl.utils.WaveEncoder;
@@ -140,7 +140,7 @@ class Mp3Wav16Decoder
 		if (context == null) {			
 			//Lib.alert('AudioContext not set');						
 			//f.trigger(Failure( { filename:filename, message:'No AudioContext!'})); 	
-			context = WebAudioTools.getAudioContext();
+			context = WATools.getAudioContext();
 		}
 		new Mp3ToBuffer(filename, context).setLoadedHandler(function(buffer:AudioBuffer, filename:String) {
 			
