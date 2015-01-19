@@ -125,7 +125,7 @@ class Wav16PartsBuilder
 		if (! this.initialized) throw "Wav16PartsBuilder not initialized - sounds not decoded";
 		
 		var length = NotenrTools.getTotalLength(partsnotes) + 1;
-		trace('Length: $length');		
+		//trace('Length: $length');		
 		var result = Wav16.createSecs(length, true);
 		//if (partsSounds == null) partsSounds = ['piano'];
 		//while (partsnotes.length > partsSounds.length) partsSounds.push(partsSounds.last());
@@ -144,7 +144,7 @@ class Wav16PartsBuilder
 				
 				if ( w16 != null) {
 					
-					trace(note.playpos);
+					//trace(note.playpos);
 					
 					var offset = Wav16Tools.toSamples(note.playpos);
 					var length = Wav16Tools.toSamples(note.soundlength + 0.1);					
