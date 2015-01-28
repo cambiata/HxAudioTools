@@ -192,26 +192,54 @@ class Wav16PartsBuilder
 	
 	public function getScoreWav16Async(nscore:NScore, tempo:Int = 60, partsSounds:Array<String> = null) : Future<Wav16> {
 		
+		//trace('PARTSSOUNDS ' + partsSounds);
+		
 		var f = Future.trigger();		
 		
 		var key = nscore.uuid + ':$tempo:$partsSounds';
 		if (this.scorecache.exists(key)) {
-			trace('Get wav16 from cache');
+			trace('Get wav16 from cache $key');
 			var wav16:Wav16 = this.scorecache.get(key);
 			f.trigger(wav16);
 		} else {					
 			var partsnotes = NotenrTools.getPartsnotes(nscore.nbars, tempo);
-			var files = NotenrTools.getPartsnotesMp3files(partsnotes);					
+			var files = NotenrTools.getPartsnotesMp3files(partsnotes, partsSounds);					
 			this.initAsync(files).handle ( function(soundmap) {
 				var wav16 = this.buildSoundmap(partsnotes, soundmap);
 				this.scorecache.set(key, wav16);
-				trace('Set wav16 to cache');
+				trace('Set wav16 to cache $key');
 				f.trigger(wav16);
 			});	
 		}
 		
 		return f.asFuture();
 	}
+	
+	public function getPartsnotesWav16Async(id:String, partsnotes:PartsNotenrItems, partsSounds:Array<String> = null) : Future<Wav16> {
+		
+		
+		var f = Future.trigger();		
+		
+		var key = id + '';
+		if (this.scorecache.exists(key)) {
+			trace('Get wav16 from cache $key');
+			var wav16:Wav16 = this.scorecache.get(key);
+			f.trigger(wav16);
+		} else {					
+			//var partsnotes = NotenrTools.getPartsnotes(nscore.nbars, tempo);
+			var files = NotenrTools.getPartsnotesMp3files(partsnotes, partsSounds);					
+			this.initAsync(files).handle ( function(soundmap) {
+				var wav16 = this.buildSoundmap(partsnotes, soundmap);
+				this.scorecache.set(key, wav16);
+				trace('Set wav16 to cache $key');
+				f.trigger(wav16);
+			});	
+		}
+		
+		return f.asFuture();
+	}	
+	
+	
 	
 	public function removeScoreFromCache(nscore:NScore, tempo:Int = 60, partsSounds:Array<String> = null) {
 		var key = nscore.uuid + ':$tempo:$partsSounds';
@@ -222,6 +250,4 @@ class Wav16PartsBuilder
 			trace('can not find key $key to remove');
 		}
 	}
-	
-	
 }

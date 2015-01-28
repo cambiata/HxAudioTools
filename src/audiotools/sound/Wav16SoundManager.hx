@@ -26,6 +26,7 @@ class Wav16SoundManager  implements Wav16Sound
 	
 	public function initSound(wav16:Wav16, playCallback:String->Float->Void, key:String) 
 	{
+		trace(key);
 		if (this.sound != null) this.sound.stop();		
 		if (wav16 == this.wav16 && playCallback == this.playCallback && key == this.key) {
 			trace('no need to re initialize');

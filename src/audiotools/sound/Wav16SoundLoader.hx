@@ -33,13 +33,25 @@ class Wav16SoundLoader
 		this.cache = new Map <String, Wav16>();
 	}	
 	
+	/*
+	public function setSoundPath(path:String) {
+		SOUND_PATH = path;
+	}
 	
+	static var SOUND_PATH:String = '/bin';
+	*/
 	
 	public function getWav16s(mp3files:Array<String>, startCallback:Int->Void=null): Future<Map<String, Wav16>>
 	{
 		var f = Future.trigger();
 		
-		var result = new Map <String, Wav16>();		
+		var result = new Map <String, Wav16>();	
+		
+		/*
+		trace(mp3files);
+		mp3files = mp3files.map(function(mp3file) return SOUND_PATH + mp3file);
+		trace(mp3files);
+		*/
 		
 		if (mp3files == null || mp3files.length == 0) f.trigger(result);
 		
