@@ -6,6 +6,7 @@ import js.html.Element;
 import js.Lib;
 using Lambda;
 using StringTools;
+using cx.Tools;
 
 /**
  * ...
@@ -21,12 +22,26 @@ class Main
 		
 		var displaydiv:Element = Browser.document.getElementById('display');
 		
-		pitcher.pitchCallback = function(semitone:Float):Void {
+		pitcher.pitchCallback = function(semitone:Float, segcount:Int):Void {
+			
+			if (segcount < 3) return;
+			
 			Browser.document.getElementById('result').textContent += Std.string(semitone).substr(0, 5) + ', ';	
 			
 			var box = Browser.document.createDivElement();
 			box.classList.add('box');
-			box.textContent = Std.string(semitone).substr(0, 5);
+			
+			var semitoneRound:Int = Math.round(semitone);
+			var semiDiff:String = Std.string(semitone - semitoneRound).substr(0, 5);
+			
+			var notenameidx:Int = -semitoneRound + 29;
+			var notename = pitcher.notenames.indexOrDefault(notenameidx, '-');
+			//box.textContent = Std.string(semitone).substr(0, 5) + ' ' + notename;
+			box.innerHTML = '<b>$notename</b><br/>$semiDiff';
+			
+			var boxwidth = Tools.intMin(Tools.intMax(40,  segcount * 10), 100);
+			box.style.width = Std.string(boxwidth) + 'px';
+			
 			displaydiv.appendChild(box);
 			
 		}
@@ -45,6 +60,8 @@ class Main
 			PitchRecognizer.getInstance().onPitch = function(currentFreq:Float, closestIndex:Int, maxVolume:Float) {
 				var semitone = (currentFreq > 0) ? PitchRecognizer.getSemitoneDiff(currentFreq) : 0;
 				var roundSemitone = Math.round(semitone);
+				
+				
 				js.Browser.document.getElementById('lblPitch').textContent = '$currentFreq : $roundSemitone / $semitone';
 				
 				pitches.push(currentFreq);
@@ -58,6 +75,8 @@ class Main
 		js.Browser.document.getElementById('btnFilter').onmousedown = function(e) {
 			pitcher.octaveFilter = !pitcher.octaveFilter;
 			trace('octave filter ' + pitcher.octaveFilter);
+			js.Browser.document.getElementById('btnFilter').textContent = 'Octave filter ' + Std.string(pitcher.octaveFilter);
+			
 		}		
 		js.Browser.document.getElementById('btnPitchStart').onmousedown = function(e) {
 			PitchRecognizer.getInstance().startAnalyzing();
@@ -202,12 +221,15 @@ class Pitcher {
 	var wa:Array<Float> = [];
 	var result:Array<Float> = [];
 	var lasttime = Date.now().getTime();
-	public var octaveFilter(default, default):Bool = false;
+	public var octaveFilter(default, default):Bool = true;
 	
 	public function addSemitone(st:Float) {
 		
 		// mansfilter
-		if (st < 6) st += 12;
+		if (octaveFilter) {
+			if (st < 6) st += 12;
+			if (st > 29) st -= 12;
+		}
 		
 		
 		var now = Date.now().getTime();
@@ -216,10 +238,10 @@ class Pitcher {
 		
 		var diff = Math.abs(st - waRound);
 		trace(diff);
-		if (diff > 0.7 || timediff > 300) {
+		if (diff > 0.7 || timediff > 400) {
 			trace('NEW');
-			if (wa.length > 3)
-				if (this.pitchCallback != null) this.pitchCallback(waRound);
+			//if (wa.length > 3)
+			if (this.pitchCallback != null) this.pitchCallback(waRound, wa.length);
 				
 			//trace(result);
 			//trace([waRound, wa.length]);
@@ -267,6 +289,12 @@ class Pitcher {
 		return sum / fs.length;
 	}
 	
-	public var pitchCallback:Float->Void = null;
+	public var pitchCallback:Float->Int->Void = null;
+
+	
+	public var notenames = ['E', 'F', 'Fiss/Gess', 'G', 'Ass/Giss', 'A', 'Bess/Aiss', 'B', 
+		'c', 'dess/ciss', 'd', 'ess/diss', 'e', 'f', 'gess/fiss', 'g', 'ass/giss', 'a', 'bess/aiss', 'b', 
+		'c1', 'dess1/ciss1', 'd1', 'ess1/diss1', 'e1', 'f1', 'gess1/fiss1', 'g1', 'ass1/giss1', 'a1', 'bess1/aiss1', 'b1', 
+		'c2', 'dess2/ciss2', 'd2', 'ess2/diss2', 'e2', 'f2', 'gess2/fiss2', 'g2', 'ass2/giss2', 'a2', 'bess2/aiss2', 'b2', ]; 
 	
 }

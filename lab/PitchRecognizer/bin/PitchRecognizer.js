@@ -15,7 +15,8 @@ Main.__name__ = true;
 Main.main = function() {
 	var pitcher = new Pitcher();
 	var displaydiv = window.document.getElementById("display");
-	pitcher.pitchCallback = function(semitone) {
+	pitcher.pitchCallback = function(semitone,segcount) {
+		if(segcount < 3) return;
 		window.document.getElementById("result").textContent += (function($this) {
 			var $r;
 			var _this;
@@ -27,9 +28,15 @@ Main.main = function() {
 		var _this1 = window.document;
 		box = _this1.createElement("div");
 		box.classList.add("box");
-		var _this2;
-		if(semitone == null) _this2 = "null"; else _this2 = "" + semitone;
-		box.textContent = HxOverrides.substr(_this2,0,5);
+		var semitoneRound = Math.round(semitone);
+		var semiDiff;
+		var _this2 = Std.string(semitone - semitoneRound);
+		semiDiff = HxOverrides.substr(_this2,0,5);
+		var notenameidx = -semitoneRound + 29;
+		var notename = cx.Tools.indexOrDefault(pitcher.notenames,notenameidx,"-");
+		box.innerHTML = "<b>" + notename + "</b><br/>" + semiDiff;
+		var boxwidth = cx.Tools.intMin(cx.Tools.intMax(40,segcount * 10),100);
+		box.style.width = (boxwidth == null?"null":"" + boxwidth) + "px";
 		displaydiv.appendChild(box);
 	};
 	var getSemitoneDiff = function(fCurrent,fRef) {
@@ -53,6 +60,7 @@ Main.main = function() {
 	window.document.getElementById("btnFilter").onmousedown = function(e1) {
 		pitcher.octaveFilter = !pitcher.octaveFilter;
 		console.log("octave filter " + (pitcher.octaveFilter == null?"null":"" + pitcher.octaveFilter));
+		window.document.getElementById("btnFilter").textContent = "Octave filter " + (pitcher.octaveFilter == null?"null":"" + pitcher.octaveFilter);
 	};
 	window.document.getElementById("btnPitchStart").onmousedown = function(e2) {
 		(audiotools.webaudio.pitch.PitchRecognizer.instance == null?audiotools.webaudio.pitch.PitchRecognizer.instance = new audiotools.webaudio.pitch.PitchRecognizer(null):audiotools.webaudio.pitch.PitchRecognizer.instance).startAnalyzing();
@@ -155,8 +163,9 @@ PitchSementsCalculator.prototype = {
 	}
 };
 var Pitcher = function() {
+	this.notenames = ["E","F","Fiss/Gess","G","Ass/Giss","A","Bess/Aiss","B","c","dess/ciss","d","ess/diss","e","f","gess/fiss","g","ass/giss","a","bess/aiss","b","c1","dess1/ciss1","d1","ess1/diss1","e1","f1","gess1/fiss1","g1","ass1/giss1","a1","bess1/aiss1","b1","c2","dess2/ciss2","d2","ess2/diss2","e2","f2","gess2/fiss2","g2","ass2/giss2","a2","bess2/aiss2","b2"];
 	this.pitchCallback = null;
-	this.octaveFilter = false;
+	this.octaveFilter = true;
 	this.lasttime = new Date().getTime();
 	this.result = [];
 	this.wa = [];
@@ -165,17 +174,18 @@ var Pitcher = function() {
 Pitcher.__name__ = true;
 Pitcher.prototype = {
 	addSemitone: function(st) {
-		if(st < 6) st += 12;
+		if(this.octaveFilter) {
+			if(st < 6) st += 12;
+			if(st > 29) st -= 12;
+		}
 		var now = new Date().getTime();
 		var timediff = now - this.lasttime;
 		console.log("timediff " + timediff);
 		var diff = Math.abs(st - this.waRound);
 		console.log(diff);
-		if(diff > 0.7 || timediff > 300) {
+		if(diff > 0.7 || timediff > 400) {
 			console.log("NEW");
-			if(this.wa.length > 3) {
-				if(this.pitchCallback != null) this.pitchCallback(this.waRound);
-			}
+			if(this.pitchCallback != null) this.pitchCallback(this.waRound,this.wa.length);
 			this.wa = [];
 			this.result.push(this.waRound);
 		}
@@ -195,6 +205,11 @@ Pitcher.prototype = {
 	}
 };
 Math.__name__ = true;
+var Std = function() { };
+Std.__name__ = true;
+Std.string = function(s) {
+	return js.Boot.__string_rec(s,"");
+};
 var audiotools = {};
 audiotools.webaudio = {};
 audiotools.webaudio.Context = function() {
@@ -573,6 +588,21 @@ audiotools.webaudio.pitch.PitchRecognizer.prototype = {
 		//==================================================================================================
 		;
 	}
+};
+var cx = {};
+cx.Tools = function() { };
+cx.Tools.__name__ = true;
+cx.Tools.intMin = function(a,b) {
+	if(a < b) return a; else return b;
+};
+cx.Tools.intMax = function(a,b) {
+	if(a > b) return a; else return b;
+};
+cx.Tools.indexOrNull = function(a,idx) {
+	if(idx < 0 || idx > a.length) return null; else return a[idx];
+};
+cx.Tools.indexOrDefault = function(a,idx,def) {
+	if(idx < 0 || idx > a.length) return def; else return a[idx];
 };
 var js = {};
 js.Boot = function() { };
