@@ -1,8 +1,25 @@
 (function () { "use strict";
+var HxOverrides = function() { };
+HxOverrides.__name__ = true;
+HxOverrides.substr = function(s,pos,len) {
+	if(pos != null && pos != 0 && len != null && len < 0) return "";
+	if(len == null) len = s.length;
+	if(pos < 0) {
+		pos = s.length + pos;
+		if(pos < 0) pos = 0;
+	} else if(len < 0) len = s.length + len - pos;
+	return s.substr(pos,len);
+};
 var Main = function() { };
 Main.__name__ = true;
 Main.main = function() {
-	var pitches = null;
+	var pitcher = new Pitcher();
+	var getSemitoneDiff = function(fCurrent,fRef) {
+		if(fRef == null) fRef = 440;
+		return 12 * Math.log(fCurrent / fRef) / Math.log(2);
+	};
+	var pitches = [];
+	var semitones = [];
 	window.document.getElementById("btnPitch").onmousedown = function(e) {
 		if(audiotools.webaudio.pitch.PitchRecognizer.instance == null) audiotools.webaudio.pitch.PitchRecognizer.instance = new audiotools.webaudio.pitch.PitchRecognizer(null); else audiotools.webaudio.pitch.PitchRecognizer.instance;
 		(audiotools.webaudio.pitch.PitchRecognizer.instance == null?audiotools.webaudio.pitch.PitchRecognizer.instance = new audiotools.webaudio.pitch.PitchRecognizer(null):audiotools.webaudio.pitch.PitchRecognizer.instance).onPitch = function(currentFreq,closestIndex,maxVolume) {
@@ -11,6 +28,8 @@ Main.main = function() {
 			var roundSemitone = Math.round(semitone);
 			window.document.getElementById("lblPitch").textContent = "" + currentFreq + " : " + roundSemitone + " / " + semitone;
 			pitches.push(currentFreq);
+			semitones.push(semitone);
+			pitcher.addSemitone(semitone);
 		};
 	};
 	window.document.getElementById("btnPitchStart").onmousedown = function(e1) {
@@ -21,12 +40,137 @@ Main.main = function() {
 	};
 	window.document.getElementById("btnStartRec").onmousedown = function(e3) {
 		pitches = [];
+		semitones = [];
+		window.document.getElementById("result").textContent = "";
 	};
 	window.document.getElementById("btnStopRec").onmousedown = function(e4) {
 		console.log(pitches);
+		console.log(semitones);
+		window.document.getElementById("result").textContent = "";
 	};
 };
+var PitchSementsCalculator = function(frequencies) {
+	this.freqs = frequencies;
+	this.freqs = this.freqs.filter(function(f) {
+		return f > 0;
+	});
+};
+PitchSementsCalculator.__name__ = true;
+PitchSementsCalculator.prototype = {
+	getSemitones: function() {
+		var result = [];
+		var _g = 0;
+		var _g1 = this.freqs;
+		while(_g < _g1.length) {
+			var f = _g1[_g];
+			++_g;
+			var semitone = -this.getSemitoneDiff(f);
+			result.push(semitone);
+		}
+		return result;
+	}
+	,getSemitonesRound: function() {
+		return this.getSemitones().map(function(s) {
+			return Math.round(s);
+		});
+	}
+	,getSemitonesWindowed: function(windowsize) {
+		if(windowsize == null) windowsize = 4;
+		var result = [];
+		var wa = [];
+		var sts = this.getSemitones();
+		var _g = 0;
+		while(_g < sts.length) {
+			var st = sts[_g];
+			++_g;
+			wa.push(st);
+			if(wa.length >= windowsize) {
+				var wround = this.roundWindow(wa);
+				result.push(wround);
+				wa.shift();
+			}
+		}
+		return result;
+	}
+	,test: function() {
+		var sts = this.getSemitones();
+		var wa = [];
+		var st = sts[0];
+		var waRound = st;
+		var result = [];
+		var _g1 = 1;
+		var _g = sts.length - 1;
+		while(_g1 < _g) {
+			var i = _g1++;
+			st = sts[i];
+			var diff = Math.abs(st - waRound);
+			console.log(diff);
+			if(diff > 1) {
+				console.log(["NEW",wa.length == null?"null":"" + wa.length]);
+				wa = [];
+				result.push(waRound);
+			}
+			wa.push(st);
+			waRound = this.roundWindow(wa);
+		}
+		result.push(waRound);
+		return result;
+	}
+	,roundWindow: function(fs) {
+		var sum = .0;
+		var _g = 0;
+		while(_g < fs.length) {
+			var f = fs[_g];
+			++_g;
+			sum += f;
+		}
+		return sum / fs.length;
+	}
+	,getSemitoneDiff: function(fCurrent,fRef) {
+		if(fRef == null) fRef = 440;
+		return 12 * Math.log(fCurrent / fRef) / Math.log(2);
+	}
+};
+var Pitcher = function() {
+	this.result = [];
+	this.wa = [];
+	this.waRound = -.1;
+};
+Pitcher.__name__ = true;
+Pitcher.prototype = {
+	addSemitone: function(st) {
+		var diff = Math.abs(st - this.waRound);
+		console.log(diff);
+		if(diff > 0.7) {
+			if(this.wa.length > 1) window.document.getElementById("result").textContent += (function($this) {
+				var $r;
+				var _this = Std.string($this.waRound);
+				$r = HxOverrides.substr(_this,0,5);
+				return $r;
+			}(this)) + "(" + Std.string(this.wa.length) + "), ";
+			this.wa = [];
+			this.result.push(this.waRound);
+		}
+		this.wa.push(st);
+		this.waRound = this.roundWindow(this.wa);
+	}
+	,roundWindow: function(fs) {
+		var sum = .0;
+		var _g = 0;
+		while(_g < fs.length) {
+			var f = fs[_g];
+			++_g;
+			sum += f;
+		}
+		return sum / fs.length;
+	}
+};
 Math.__name__ = true;
+var Std = function() { };
+Std.__name__ = true;
+Std.string = function(s) {
+	return js.Boot.__string_rec(s,"");
+};
 var audiotools = {};
 audiotools.webaudio = {};
 audiotools.webaudio.Context = function() {
@@ -68,7 +212,7 @@ audiotools.webaudio.pitch.PitchRecognizer.getInstance = function(audioContext) {
 };
 audiotools.webaudio.pitch.PitchRecognizer.getSemitoneDiff = function(fCurrent,fRef) {
 	if(fRef == null) fRef = 440;
-	return 12 * Math.log(fCurrent / fRef) / Math.log(2);
+	return -(12 * Math.log(fCurrent / fRef) / Math.log(2));
 };
 audiotools.webaudio.pitch.PitchRecognizer.prototype = {
 	onPitchHandler: function(currentFreq,closestIndex,maxVolume) {
@@ -494,6 +638,33 @@ Math.isNaN = function(i1) {
 };
 String.__name__ = true;
 Array.__name__ = true;
+if(Array.prototype.map == null) Array.prototype.map = function(f) {
+	var a = [];
+	var _g1 = 0;
+	var _g = this.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		a[i] = f(this[i]);
+	}
+	return a;
+};
+if(Array.prototype.filter == null) Array.prototype.filter = function(f1) {
+	var a1 = [];
+	var _g11 = 0;
+	var _g2 = this.length;
+	while(_g11 < _g2) {
+		var i1 = _g11++;
+		var e = this[i1];
+		if(f1(e)) a1.push(e);
+	}
+	return a1;
+};
+Main.treklang = [50.2,50.2,202.6,202.6,203.9,0,172.1,172.1,172.1,172.1,173.2,173.2,171.8,171.7,171,171,138.2,134.7,134.6,0];
+Main.threeNotes = [177.3,173.7,173.7,171.7,171.7,171.4,171.1,169.4,169,166.7,166.5,163,145.9,142.9,138.4,138.4,138.4,139,143.7,147.9,147.9,149.3,149.3,147.9,149.6,150.5,150.5,149.6];
+Main.oneNote = [192.3,192.3,192.3,188.9,188.9,186.6,184.1,183.3,183.2,182.9,182.4,182.4,0];
+Main.oneNoteC = [128.4,127.3,127.3,125.5,127,127,127,128.6,129.1,129.1,129.1,129.2,129.1];
+Main.twoNotes = [226.3,220.9,220.9,217.1,217.1,212.9,209.2,198.4,195.7,195.4,195.3,193.5,166.3,165.9,165.9,165.8,165.2,165.2];
+Main.gliss = [139.4,139.4,139.4,139.3,139.4,139.3,139.3,139.1,139.6,139.6,139.8,142.9,145.5,145.8,146.9,146.9,146.9,139.7,138.6,138.6,138.2,138.6,144.3,144.3,143.2,143.9,143.2,143,138.4,138.4,138.3,138.1,138.3];
 audiotools.webaudio.pitch.PitchRecognizer.analyzePitch = false;
 Main.main();
 })();

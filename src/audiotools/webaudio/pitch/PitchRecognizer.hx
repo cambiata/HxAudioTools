@@ -24,7 +24,7 @@ class PitchRecognizer {
 	}	
 	
 	static public function getSemitoneDiff(fCurrent:Float, fRef:Float=440) {
-		return 12*Math.log(fCurrent/fRef)/Math.log(2);
+		return -(12*Math.log(fCurrent/fRef)/Math.log(2));
 	} 	
 	
 	public var onPitch: Float->Int->Float->Void;
