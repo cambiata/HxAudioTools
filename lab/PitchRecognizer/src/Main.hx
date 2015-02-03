@@ -2,6 +2,7 @@ package;
 
 import audiotools.webaudio.pitch.PitchRecognizer;
 import js.Browser;
+import js.html.Element;
 import js.Lib;
 using Lambda;
 using StringTools;
@@ -17,6 +18,19 @@ class Main
 	{
 		
 		var pitcher = new Pitcher();
+		
+		var displaydiv:Element = Browser.document.getElementById('display');
+		
+		pitcher.pitchCallback = function(semitone:Float):Void {
+			Browser.document.getElementById('result').textContent += Std.string(semitone).substr(0, 5) + ', ';	
+			
+			var box = Browser.document.createDivElement();
+			box.classList.add('box');
+			box.textContent = Std.string(semitone).substr(0, 5);
+			displaydiv.appendChild(box);
+			
+		}
+		
 		
 		function getSemitoneDiff(fCurrent:Float, fRef:Float=440) {
 			return 12*Math.log(fCurrent/fRef)/Math.log(2);
@@ -41,6 +55,10 @@ class Main
 			}
 		}
 		
+		js.Browser.document.getElementById('btnFilter').onmousedown = function(e) {
+			pitcher.octaveFilter = !pitcher.octaveFilter;
+			trace('octave filter ' + pitcher.octaveFilter);
+		}		
 		js.Browser.document.getElementById('btnPitchStart').onmousedown = function(e) {
 			PitchRecognizer.getInstance().startAnalyzing();
 		}
@@ -61,6 +79,7 @@ class Main
 			trace(pitches);
 			trace(semitones);
 			Browser.document.getElementById('result').textContent = '';
+			displaydiv.innerHTML = '';
 		}
 		
 		/*
@@ -182,14 +201,26 @@ class Pitcher {
 	var waRound = -.1;
 	var wa:Array<Float> = [];
 	var result:Array<Float> = [];
+	var lasttime = Date.now().getTime();
+	public var octaveFilter(default, default):Bool = false;
 	
 	public function addSemitone(st:Float) {
+		
+		// mansfilter
+		if (st < 6) st += 12;
+		
+		
+		var now = Date.now().getTime();
+		var timediff = now - lasttime;
+		trace('timediff ' + timediff);
+		
 		var diff = Math.abs(st - waRound);
 		trace(diff);
-		if (diff > 0.7) {
-			
-			if (wa.length > 1)
-				Browser.document.getElementById('result').textContent += Std.string(waRound).substr(0, 5) + '(' + Std.string(wa.length) + '), ';
+		if (diff > 0.7 || timediff > 300) {
+			trace('NEW');
+			if (wa.length > 3)
+				if (this.pitchCallback != null) this.pitchCallback(waRound);
+				
 			//trace(result);
 			//trace([waRound, wa.length]);
 			wa = [];
@@ -197,6 +228,7 @@ class Pitcher {
 		}
 		wa.push(st);
 		waRound = roundWindow(wa);
+		lasttime = now;
 	}
 	
 	/*
@@ -235,6 +267,6 @@ class Pitcher {
 		return sum / fs.length;
 	}
 	
-	
+	public var pitchCallback:Float->Void = null;
 	
 }

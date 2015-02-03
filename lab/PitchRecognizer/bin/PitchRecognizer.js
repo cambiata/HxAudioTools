@@ -14,6 +14,24 @@ var Main = function() { };
 Main.__name__ = true;
 Main.main = function() {
 	var pitcher = new Pitcher();
+	var displaydiv = window.document.getElementById("display");
+	pitcher.pitchCallback = function(semitone) {
+		window.document.getElementById("result").textContent += (function($this) {
+			var $r;
+			var _this;
+			if(semitone == null) _this = "null"; else _this = "" + semitone;
+			$r = HxOverrides.substr(_this,0,5);
+			return $r;
+		}(this)) + ", ";
+		var box;
+		var _this1 = window.document;
+		box = _this1.createElement("div");
+		box.classList.add("box");
+		var _this2;
+		if(semitone == null) _this2 = "null"; else _this2 = "" + semitone;
+		box.textContent = HxOverrides.substr(_this2,0,5);
+		displaydiv.appendChild(box);
+	};
 	var getSemitoneDiff = function(fCurrent,fRef) {
 		if(fRef == null) fRef = 440;
 		return 12 * Math.log(fCurrent / fRef) / Math.log(2);
@@ -23,30 +41,35 @@ Main.main = function() {
 	window.document.getElementById("btnPitch").onmousedown = function(e) {
 		if(audiotools.webaudio.pitch.PitchRecognizer.instance == null) audiotools.webaudio.pitch.PitchRecognizer.instance = new audiotools.webaudio.pitch.PitchRecognizer(null); else audiotools.webaudio.pitch.PitchRecognizer.instance;
 		(audiotools.webaudio.pitch.PitchRecognizer.instance == null?audiotools.webaudio.pitch.PitchRecognizer.instance = new audiotools.webaudio.pitch.PitchRecognizer(null):audiotools.webaudio.pitch.PitchRecognizer.instance).onPitch = function(currentFreq,closestIndex,maxVolume) {
-			var semitone;
-			if(currentFreq > 0) semitone = audiotools.webaudio.pitch.PitchRecognizer.getSemitoneDiff(currentFreq); else semitone = 0;
-			var roundSemitone = Math.round(semitone);
-			window.document.getElementById("lblPitch").textContent = "" + currentFreq + " : " + roundSemitone + " / " + semitone;
+			var semitone1;
+			if(currentFreq > 0) semitone1 = audiotools.webaudio.pitch.PitchRecognizer.getSemitoneDiff(currentFreq); else semitone1 = 0;
+			var roundSemitone = Math.round(semitone1);
+			window.document.getElementById("lblPitch").textContent = "" + currentFreq + " : " + roundSemitone + " / " + semitone1;
 			pitches.push(currentFreq);
-			semitones.push(semitone);
-			pitcher.addSemitone(semitone);
+			semitones.push(semitone1);
+			pitcher.addSemitone(semitone1);
 		};
 	};
-	window.document.getElementById("btnPitchStart").onmousedown = function(e1) {
+	window.document.getElementById("btnFilter").onmousedown = function(e1) {
+		pitcher.octaveFilter = !pitcher.octaveFilter;
+		console.log("octave filter " + (pitcher.octaveFilter == null?"null":"" + pitcher.octaveFilter));
+	};
+	window.document.getElementById("btnPitchStart").onmousedown = function(e2) {
 		(audiotools.webaudio.pitch.PitchRecognizer.instance == null?audiotools.webaudio.pitch.PitchRecognizer.instance = new audiotools.webaudio.pitch.PitchRecognizer(null):audiotools.webaudio.pitch.PitchRecognizer.instance).startAnalyzing();
 	};
-	window.document.getElementById("btnPitchStop").onmousedown = function(e2) {
+	window.document.getElementById("btnPitchStop").onmousedown = function(e3) {
 		(audiotools.webaudio.pitch.PitchRecognizer.instance == null?audiotools.webaudio.pitch.PitchRecognizer.instance = new audiotools.webaudio.pitch.PitchRecognizer(null):audiotools.webaudio.pitch.PitchRecognizer.instance).stopAnalyzing();
 	};
-	window.document.getElementById("btnStartRec").onmousedown = function(e3) {
+	window.document.getElementById("btnStartRec").onmousedown = function(e4) {
 		pitches = [];
 		semitones = [];
 		window.document.getElementById("result").textContent = "";
 	};
-	window.document.getElementById("btnStopRec").onmousedown = function(e4) {
+	window.document.getElementById("btnStopRec").onmousedown = function(e5) {
 		console.log(pitches);
 		console.log(semitones);
 		window.document.getElementById("result").textContent = "";
+		displaydiv.innerHTML = "";
 	};
 };
 var PitchSementsCalculator = function(frequencies) {
@@ -132,6 +155,9 @@ PitchSementsCalculator.prototype = {
 	}
 };
 var Pitcher = function() {
+	this.pitchCallback = null;
+	this.octaveFilter = false;
+	this.lasttime = new Date().getTime();
 	this.result = [];
 	this.wa = [];
 	this.waRound = -.1;
@@ -139,20 +165,23 @@ var Pitcher = function() {
 Pitcher.__name__ = true;
 Pitcher.prototype = {
 	addSemitone: function(st) {
+		if(st < 6) st += 12;
+		var now = new Date().getTime();
+		var timediff = now - this.lasttime;
+		console.log("timediff " + timediff);
 		var diff = Math.abs(st - this.waRound);
 		console.log(diff);
-		if(diff > 0.7) {
-			if(this.wa.length > 1) window.document.getElementById("result").textContent += (function($this) {
-				var $r;
-				var _this = Std.string($this.waRound);
-				$r = HxOverrides.substr(_this,0,5);
-				return $r;
-			}(this)) + "(" + Std.string(this.wa.length) + "), ";
+		if(diff > 0.7 || timediff > 300) {
+			console.log("NEW");
+			if(this.wa.length > 3) {
+				if(this.pitchCallback != null) this.pitchCallback(this.waRound);
+			}
 			this.wa = [];
 			this.result.push(this.waRound);
 		}
 		this.wa.push(st);
 		this.waRound = this.roundWindow(this.wa);
+		this.lasttime = now;
 	}
 	,roundWindow: function(fs) {
 		var sum = .0;
@@ -166,11 +195,6 @@ Pitcher.prototype = {
 	}
 };
 Math.__name__ = true;
-var Std = function() { };
-Std.__name__ = true;
-Std.string = function(s) {
-	return js.Boot.__string_rec(s,"");
-};
 var audiotools = {};
 audiotools.webaudio = {};
 audiotools.webaudio.Context = function() {
@@ -287,7 +311,7 @@ audiotools.webaudio.pitch.PitchRecognizer.prototype = {
 		/* GUI variables */
 		var pixelsPerCent = 3;
 		var silenceTimeout = null;
-		var minUpdateDelay = 100; // Pitch/GUI maximum update rate in milliseconds
+		var minUpdateDelay = 75; // Pitch/GUI maximum update rate in milliseconds
 
 		window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
 		//window.AudioContext = window.AudioContext || window.webkitAudioContext || window.mozAudioContext || window.oAudioContext || window.msAudioContext;
@@ -638,6 +662,7 @@ Math.isNaN = function(i1) {
 };
 String.__name__ = true;
 Array.__name__ = true;
+Date.__name__ = ["Date"];
 if(Array.prototype.map == null) Array.prototype.map = function(f) {
 	var a = [];
 	var _g1 = 0;
