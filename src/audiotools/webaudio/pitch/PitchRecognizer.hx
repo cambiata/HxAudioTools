@@ -24,7 +24,7 @@ class PitchRecognizer {
 	}	
 	
 	static public function getSemitoneDiff(fCurrent:Float, fRef:Float=440) {
-		return 12*Math.log(fCurrent/fRef)/Math.log(2);
+		return -(12*Math.log(fCurrent/fRef)/Math.log(2));
 	} 	
 	
 	public var onPitch: Float->Int->Float->Void;
@@ -110,7 +110,7 @@ class PitchRecognizer {
 		/* GUI variables */
 		var pixelsPerCent = 3;
 		var silenceTimeout = null;
-		var minUpdateDelay = 100; // Pitch/GUI maximum update rate in milliseconds
+		var minUpdateDelay = 75; // Pitch/GUI maximum update rate in milliseconds
 
 		window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
 		//window.AudioContext = window.AudioContext || window.webkitAudioContext || window.mozAudioContext || window.oAudioContext || window.msAudioContext;
