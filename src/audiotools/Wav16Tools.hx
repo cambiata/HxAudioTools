@@ -149,7 +149,8 @@ class Wav16Tools
 	}
 	
 	
-	static var SAMPLERATE:Int = #if flash 44100 #end #if js 48000 #end;		
+	//static var SAMPLERATE:Int = #if flash 44100 #end #if js 48000 #end ;		
+	static var SAMPLERATE:Int = #if js  48000 #else 48000 #end ;		
 	
 	static public function toSecs(samples:Int) return samples / SAMPLERATE;
 	static public function toSamples(secs:Float) return Std.int(secs * SAMPLERATE);

@@ -5,6 +5,7 @@ import format.wav.Writer;
 import haxe.ds.Vector;
 import haxe.io.Bytes;
 import haxe.io.BytesInput;
+import haxe.io.BytesOutput;
 import haxe.macro.Format;
 
 #if (sys)
@@ -77,6 +78,17 @@ class Wav16
 		new Writer(File.write(filename, true)).write( { header: header, data: data } );		
 		} catch (e:Dynamic) throw 'Could not write file $filename';
 	}	
+	
+	public function saveBytes():Bytes {
+		var header = Wav16Tools.createHeader(this.stereo);
+		var data = (this.stereo) ? Wav16Tools.intsToStero16Bytes(this.ch1, this.ch2) : Wav16Tools.intsToMono16Bytes(this.ch1);				
+		var bytesOutput:BytesOutput = new BytesOutput();		
+		try {
+			new Writer(bytesOutput).write( { header: header, data: data } );		
+		} catch (e:Dynamic) throw 'Could not write file bo bytes';
+		return bytesOutput.getBytes();
+	}
+	
 	#end
 	
 	public function toStereo() {

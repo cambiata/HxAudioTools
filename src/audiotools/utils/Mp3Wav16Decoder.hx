@@ -66,22 +66,39 @@ class Mp3Wav16Decoder
 		return this;
 	}	
 	*/
+	
+	// HACK
+	static var serverpath = '/var/www/dev.korakademin.se/www/';	
+	static var servertemp = '/var/www/dev.korakademin.se/temp/';	
+	
+	
 	#if (sys)	
 	static public function decode(filename:String, tempPath:String = ''):Surprise<Wav16File, Wav16Error> {
 			var f = Future.trigger();
 			//var filename = Sys.getCwd() + filename;
-			if (FileSystem.exists(filename)) {
-				var tempFilename = (tempPath != '') ? '$tempPath/temp.wav' : 'temp.wav';
-				var command = Sys.command('sox', [filename, tempFilename]);
+			
+			var sysFilename = filename;
+			if (! FileSystem.exists(sysFilename)) sysFilename = '.' + filename;			
+			// HACK
+			if (! FileSystem.exists(sysFilename)) sysFilename = serverpath + filename;
+			
+			
+			var tempdir = '../temp/';
+			if (! FileSystem.exists(tempdir)) tempdir = servertemp;
+			
+			if (FileSystem.exists(sysFilename)) {
+				var tempFilename = tempdir + 'temp.wav';				
+				
+				File.saveContent(tempdir + 'test.txt', 'abc');
+				
+				var command = Sys.command('sox', [sysFilename, tempFilename]);
 				var w16 = Wav16.fromFile(tempFilename);
-				FileSystem.deleteFile(tempFilename);			
+				FileSystem.deleteFile(tempFilename);		
 				f.trigger(Success( { filename:filename, w16: w16}));
 			} else {			
 				f.trigger(Failure( { filename:filename, message: 'Can\'t find $filename'})); 				
-			}
-			
-			return f.asFuture();
-			
+			}			
+			return f.asFuture();			
 		}
 	#end
 

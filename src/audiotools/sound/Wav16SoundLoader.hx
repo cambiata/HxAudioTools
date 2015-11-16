@@ -13,6 +13,7 @@ import audiotools.utils.Mp3Wav16Decoder;
 
 using Lambda;
 using cx.ArrayTools;
+using StringTools;
  
 class Wav16SoundLoader 
 {
@@ -43,6 +44,8 @@ class Wav16SoundLoader
 	
 	public function getWav16s(mp3files:Array<String>, startCallback:Int->Void=null): Future<Map<String, Wav16>>
 	{
+		
+		
 		var f = Future.trigger();
 		
 		var result = new Map <String, Wav16>();	
@@ -80,6 +83,12 @@ class Wav16SoundLoader
 		
 		Mp3Wav16Decoders.decodeAllMap(loadKeys).handle(function(soundData:Map<String, Wav16>) {			
 			for (mp3file in soundData.keys()) {
+				
+				// removie initial chars:
+				//if (mp3file.startsWith('/')) mp3file = mp3file.substr(1);
+				//if (mp3file.startsWith('./')) mp3file = mp3file.substr(1);
+				
+				
 				this.cache.set(mp3file, soundData.get(mp3file));
 				result.set(mp3file, soundData.get(mp3file));
 			}

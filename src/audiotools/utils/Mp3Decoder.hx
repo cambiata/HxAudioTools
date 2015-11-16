@@ -49,14 +49,22 @@ import flash.utils.ByteArray;
  
 class Mp3Decoder 
 {
+	static var serverpath = '/var/www/owncloud/data/jonasn/files/Korakademin/dev/www/';	
+	
 	#if (sys)	
 	public function decode(filename:String, tempPath:String = ''):Surprise<DecodedMp3, DecodedError> {
 		
 		var f = Future.trigger();
 		
-		if (FileSystem.exists(filename)) {
+		var sysFilename = filename;
+		
+		if (! FileSystem.exists(sysFilename)) {
+			sysFilename = serverpath + sysFilename;
+		}
+		
+		if (FileSystem.exists(sysFilename)) {
 			var tempFilename = (tempPath != '') ? '$tempPath/temp.wav' : 'temp.wav';
-			var command = Sys.command('sox', [filename, tempFilename]);
+			var command = Sys.command('sox', [sysFilename, tempFilename]);
 			var bytes = File.getBytes(tempFilename);
 			FileSystem.deleteFile(tempFilename);
 			f.trigger(Success( { filename:filename, bytes: bytes}));

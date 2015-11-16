@@ -142,6 +142,9 @@ class Wav16PartsBuilder
 				
 				var w16 = this.soundmap.get(key);
 				
+				
+				
+				
 				if ( w16 != null) {
 					
 					//trace(note.playpos);
@@ -158,6 +161,39 @@ class Wav16PartsBuilder
 		}		
 		return result;
 	}	
+	
+	
+	public function buildSoundmapOutcome(partsnotes:PartsNotenrItems,soundmap:Map<String, Wav16>) :Future<Outcome<Wav16, String>>
+	{
+		
+		var f = Future.trigger();				
+		if (! this.initialized) throw "Wav16PartsBuilder not initialized - sounds not decoded";		
+		var length = NotenrTools.getTotalLength(partsnotes) + 1;
+		var result = Wav16.createSecs(length, true);		
+		var partidx = 0;
+		for (part in partsnotes) {
+			//var partSound = partsSounds[partidx];
+			for (note in part) {				
+				if (!note.playable) continue;	
+				
+				//var key = 'sounds/$partSound/${note.midinr}.mp3';	
+				var key = note.mp3file;
+				var w16 = this.soundmap.get(key);
+				if ( w16 != null) {
+					var offset = Wav16Tools.toSamples(note.playpos);
+					var length = Wav16Tools.toSamples(note.soundlength + 0.1);					
+					Wav16DSP.wspMixInto(result, w16, offset, length);	
+				} else {					
+					trace('ERROR : $key == null!');					
+					f.trigger(Failure('ERROR : $key == null!'));
+				}				
+			}
+			partidx++;
+		}		
+		
+		f.trigger(Success(result));
+		return f.asFuture();
+	}		
 	
 	
 	
@@ -203,7 +239,9 @@ class Wav16PartsBuilder
 			f.trigger(wav16);
 		} else {					
 			var partsnotes = NotenrTools.getPartsnotes(nscore.nbars, tempo);
-			var files = NotenrTools.getPartsnotesMp3files(partsnotes, partsSounds);					
+			var files = NotenrTools.getPartsnotesMp3files(partsnotes, partsSounds);	
+			trace(files);
+			
 			this.initAsync(files).handle ( function(soundmap) {
 				var wav16 = this.buildSoundmap(partsnotes, soundmap);
 				this.scorecache.set(key, wav16);
@@ -214,6 +252,40 @@ class Wav16PartsBuilder
 		
 		return f.asFuture();
 	}
+	
+	public function scoreToWav(nscore:NScore, tempo:Int = 60, partsSounds:Array<String> = null) : Future < Outcome<Wav16, String>>
+	{
+		var f = Future.trigger();		
+		var keyPartssounds = (partsSounds != null) ? partsSounds.join('-') : 'sounds';
+		var key = nscore.uuid + '-$tempo-$keyPartssounds';
+		if (this.scorecache.exists(key)) {
+			trace('Get wav16 from cache $key');
+			var wav16:Wav16 = this.scorecache.get(key);
+			f.trigger(Success(wav16));
+		} else {					
+			var partsnotes = NotenrTools.getPartsnotes(nscore.nbars, tempo);
+			var files = NotenrTools.getPartsnotesMp3files(partsnotes, partsSounds);	
+			trace(files);
+			
+			this.initAsync(files).handle ( function(soundmap) {
+				//var wav16 = this.buildSoundmapOutcome(partsnotes, soundmap);
+				this.buildSoundmapOutcome(partsnotes, soundmap).handle(function(outcomeW16) {
+					switch outcomeW16 {
+						case Success(wav16):
+							this.scorecache.set(key, wav16);
+							trace('Set wav16 to cache $key');
+							f.trigger(Success(wav16));
+						case Failure(msg):
+							f.trigger(Failure(msg));
+					}					
+				});
+				//f.trigger(wav16);
+			});	
+		}
+		return f.asFuture();		
+	}
+	
+	
 	
 	public function getPartsnotesWav16Async(id:String, partsnotes:PartsNotenrItems, partsSounds:Array<String> = null) : Future<Wav16> {
 		
